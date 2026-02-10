@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate": "tsx scripts/migrate-data.ts"
+    "migrate": "tsx scripts/migrate-data.ts",
+    "update-logos": "tsx scripts/update-logos.ts",
+    "fetch-espn-logos": "tsx scripts/fetch-espn-logos.ts",
+    "download-logos": "tsx scripts/download-logos.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
