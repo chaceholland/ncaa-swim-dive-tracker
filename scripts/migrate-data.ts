@@ -99,7 +99,7 @@ async function migrateTeams() {
     try {
       const { data, error } = await supabase
         .from('teams')
-        .upsert(team, { onConflict: 'name' });
+        .insert(team);
 
       if (error) {
         console.error(`Error migrating ${team.name}:`, error.message);
