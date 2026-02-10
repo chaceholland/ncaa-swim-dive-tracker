@@ -105,6 +105,10 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -128,5 +132,5 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-slate-500);
+  background: var(--color-slate-700);
 }
