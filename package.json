@@ -12,7 +12,8 @@
     "fetch-espn-logos": "tsx scripts/fetch-espn-logos.ts",
     "download-logos": "tsx scripts/download-logos.ts",
     "scrape-athletes": "tsx scripts/scrape-athletes.ts",
-    "scrape-athletes-v2": "tsx scripts/scrape-athletes-v2.ts"
+    "scrape-athletes-v2": "tsx scripts/scrape-athletes-v2.ts",
+    "upgrade-images": "tsx scripts/upgrade-image-quality.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
