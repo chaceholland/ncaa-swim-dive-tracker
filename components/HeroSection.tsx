@@ -155,7 +155,7 @@ export default function HeroSection() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto"
             >
-              Track every team, athlete, and performance across Division I
+              Track every team and athlete across Division I men's
               swimming and diving
             </motion.p>
           </motion.div>
@@ -167,9 +167,9 @@ export default function HeroSection() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12"
           >
-            <StatCard value={200} label="D1 Teams" />
-            <StatCard value={8500} label="Athletes" />
-            <StatCard value={12} label="Missing Data" highlight />
+            <StatCard value={53} label="D1 Men's Teams" />
+            <StatCard value={1628} label="Athletes" />
+            <StatCard value={45} label="Teams with Data" highlight />
           </motion.div>
 
           {/* Last updated timestamp */}
