@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Team } from '@/lib/supabase/types';
 import { useIntersectionObserver } from '@/lib/hooks/useIntersectionObserver';
 import {
@@ -83,18 +84,19 @@ export default function TeamCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <motion.div
-        className={cn(
-          'relative h-52 rounded-2xl shadow-lg overflow-hidden cursor-pointer',
-          'transition-shadow duration-300'
-        )}
-        whileHover={{
-          y: -8,
-          scale: 1.02,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      >
+      <Link href={`/team/${team.id}`}>
+        <motion.div
+          className={cn(
+            'relative h-52 rounded-2xl shadow-lg overflow-hidden cursor-pointer',
+            'transition-shadow duration-300'
+          )}
+          whileHover={{
+            y: -8,
+            scale: 1.02,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
         {/* Background gradient */}
         <div
           className="absolute inset-0 z-0"
@@ -242,7 +244,8 @@ export default function TeamCard({
             </div>
           </div>
         </div>
-      </motion.div>
+        </motion.div>
+      </Link>
     </motion.div>
   );
 }

@@ -105,6 +105,7 @@ export default function Home() {
         const { data, error } = await supabase
           .from('teams')
           .select('*')
+          .gt('athlete_count', 0)
           .order('athlete_count', { ascending: false });
 
         if (error) {
