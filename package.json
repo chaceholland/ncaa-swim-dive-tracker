@@ -10,7 +10,8 @@
     "migrate": "tsx scripts/migrate-data.ts",
     "update-logos": "tsx scripts/update-logos.ts",
     "fetch-espn-logos": "tsx scripts/fetch-espn-logos.ts",
-    "download-logos": "tsx scripts/download-logos.ts"
+    "download-logos": "tsx scripts/download-logos.ts",
+    "scrape-athletes": "tsx scripts/scrape-athletes.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
@@ -29,6 +30,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "playwright": "^1.58.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
