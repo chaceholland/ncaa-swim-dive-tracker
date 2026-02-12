@@ -487,7 +487,7 @@ function IssueButton({
         >
           <h4 className="font-semibold text-slate-900 mb-3">Data Quality Issues</h4>
 
-          <div className="space-y-2 mb-4 max-h-80 overflow-y-auto">
+          <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
             {issueOptions.map(option => (
               <label
                 key={option}
