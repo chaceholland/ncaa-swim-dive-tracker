@@ -203,9 +203,18 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
             let photoSrc = await photoElement.getAttribute('src');
             if (!photoSrc) photoSrc = await photoElement.getAttribute('data-src');
             if (photoSrc) {
-              athlete.photo_url = photoSrc.startsWith('http')
+              let photoUrl = photoSrc.startsWith('http')
                 ? photoSrc
                 : new URL(photoSrc, rosterUrl).href;
+
+              // Upgrade to high-resolution images for Sidearm
+              if (photoUrl.includes('sidearmdev.com') || photoUrl.includes('sidearm')) {
+                // Replace width=800&height=800 with width=1600&height=1600
+                photoUrl = photoUrl.replace(/width=\d+/g, 'width=1600');
+                photoUrl = photoUrl.replace(/height=\d+/g, 'height=1600');
+              }
+
+              athlete.photo_url = photoUrl;
             }
           }
 
