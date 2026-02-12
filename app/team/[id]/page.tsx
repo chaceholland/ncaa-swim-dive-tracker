@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Team, Athlete } from '@/lib/supabase/types';
 import { getTeamGradient, getTeamInitials } from '@/lib/utils';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+
+type DataQualityIssue = {
+  athleteId: string;
+  issues: string[];
+  customNote?: string;
+};
 
 export default function TeamRosterPage() {
   const params = useParams();
@@ -14,6 +21,9 @@ export default function TeamRosterPage() {
   const [team, setTeam] = useState<Team | null>(null);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [favoriteAthleteIds, setFavoriteAthleteIds] = useLocalStorage<string[]>('favorite-athletes', []);
+  const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<DataQualityIssue[]>('data-quality-issues', []);
+  const [showIssuesOnly, setShowIssuesOnly] = useState(false);
 
   useEffect(() => {
     async function fetchTeamAndAthletes() {
@@ -48,6 +58,84 @@ export default function TeamRosterPage() {
 
     fetchTeamAndAthletes();
   }, [params.id]);
+
+  // Convert arrays to Sets for faster lookups
+  const favoriteAthleteIdsSet = useMemo(() => {
+    return new Set(favoriteAthleteIds);
+  }, [favoriteAthleteIds]);
+
+  const dataQualityIssuesMap = useMemo(() => {
+    const map = new Map<string, DataQualityIssue>();
+    dataQualityIssues.forEach(issue => {
+      map.set(issue.athleteId, issue);
+    });
+    return map;
+  }, [dataQualityIssues]);
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = (athleteId: string) => {
+    setFavoriteAthleteIds(prev => {
+      if (prev.includes(athleteId)) {
+        return prev.filter(id => id !== athleteId);
+      } else {
+        return [...prev, athleteId];
+      }
+    });
+  };
+
+  // Handle data quality issue toggle
+  const handleIssueToggle = (athleteId: string, selectedIssues: string[], customNote?: string) => {
+    setDataQualityIssues(prev => {
+      const existing = prev.find(issue => issue.athleteId === athleteId);
+
+      if (selectedIssues.length === 0 && !customNote) {
+        // Remove if no issues selected
+        return prev.filter(issue => issue.athleteId !== athleteId);
+      }
+
+      if (existing) {
+        // Update existing
+        return prev.map(issue =>
+          issue.athleteId === athleteId
+            ? { athleteId, issues: selectedIssues, customNote }
+            : issue
+        );
+      } else {
+        // Add new
+        return [...prev, { athleteId, issues: selectedIssues, customNote }];
+      }
+    });
+  };
+
+  // Copy issues to clipboard
+  const handleCopyIssues = async () => {
+    const issueReport = dataQualityIssues
+      .map(issue => {
+        const athlete = athletes.find(a => a.id === issue.athleteId);
+        if (!athlete) return null;
+
+        const issueText = issue.issues.join(', ');
+        const customText = issue.customNote ? ` - ${issue.customNote}` : '';
+        return `${athlete.name} (${team?.name}): ${issueText}${customText}`;
+      })
+      .filter(Boolean)
+      .join('\n');
+
+    try {
+      await navigator.clipboard.writeText(issueReport);
+      alert('Issues copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  // Filter athletes
+  const displayedAthletes = useMemo(() => {
+    if (showIssuesOnly) {
+      return athletes.filter(athlete => dataQualityIssuesMap.has(athlete.id));
+    }
+    return athletes;
+  }, [athletes, showIssuesOnly, dataQualityIssuesMap]);
 
   if (loading) {
     return (
@@ -129,15 +217,45 @@ export default function TeamRosterPage() {
 
       {/* Roster Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-3xl font-bold text-slate-900 mb-8">Roster</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold text-slate-900">Roster</h2>
 
-        {athletes.length === 0 ? (
+          <div className="flex items-center gap-4">
+            {dataQualityIssues.length > 0 && (
+              <>
+                <button
+                  onClick={() => setShowIssuesOnly(!showIssuesOnly)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    showIssuesOnly
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                  }`}
+                >
+                  {showIssuesOnly ? 'Show All' : `Show Issues (${dataQualityIssues.length})`}
+                </button>
+                <button
+                  onClick={handleCopyIssues}
+                  className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  Copy Issues
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {displayedAthletes.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-slate-600 text-lg">No athletes found for this team.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {athletes.map((athlete, index) => (
+            {displayedAthletes.map((athlete, index) => {
+              const isFavorite = favoriteAthleteIdsSet.has(athlete.id);
+              const hasIssue = dataQualityIssuesMap.has(athlete.id);
+              const issueData = dataQualityIssuesMap.get(athlete.id);
+
+              return (
               <motion.div
                 key={athlete.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -155,6 +273,21 @@ export default function TeamRosterPage() {
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
+                  ) : team.logo_url ? (
+                    <div
+                      className="w-full h-full flex items-center justify-center p-8"
+                      style={{
+                        background: `linear-gradient(135deg, ${team.primary_color}, ${team.secondary_color})`,
+                      }}
+                    >
+                      <Image
+                        src={team.logo_url}
+                        alt={team.name}
+                        width={120}
+                        height={120}
+                        className="object-contain"
+                      />
+                    </div>
                   ) : (
                     <div
                       className="w-full h-full flex items-center justify-center text-6xl font-bold text-white"
@@ -178,6 +311,48 @@ export default function TeamRosterPage() {
                       </span>
                     </div>
                   )}
+
+                  {/* Action Buttons */}
+                  <div className="absolute bottom-3 right-3 flex gap-2">
+                    {/* Favorite Button */}
+                    <motion.button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleFavoriteToggle(athlete.id);
+                      }}
+                      className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
+                        isFavorite
+                          ? 'bg-white/90 text-yellow-500'
+                          : 'bg-black/30 text-white hover:bg-black/50'
+                      }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill={isFavorite ? 'currentColor' : 'none'}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                        />
+                      </svg>
+                    </motion.button>
+
+                    {/* Report Issue Button */}
+                    <IssueButton
+                      athleteId={athlete.id}
+                      hasIssue={hasIssue}
+                      issueData={issueData}
+                      onIssueToggle={handleIssueToggle}
+                    />
+                  </div>
                 </div>
 
                 {/* Athlete Info */}
@@ -210,10 +385,152 @@ export default function TeamRosterPage() {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Issue Button Component
+function IssueButton({
+  athleteId,
+  hasIssue,
+  issueData,
+  onIssueToggle,
+}: {
+  athleteId: string;
+  hasIssue: boolean;
+  issueData?: DataQualityIssue;
+  onIssueToggle: (athleteId: string, issues: string[], customNote?: string) => void;
+}) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [selectedIssues, setSelectedIssues] = useState<string[]>(issueData?.issues || []);
+  const [customNote, setCustomNote] = useState(issueData?.customNote || '');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+
+  const issueOptions = [
+    'Woman',
+    'Coach not needed',
+    'Missing Headshot',
+    'Missing position',
+    'Missing URL link',
+    'Wrong classification',
+    'No height/weight',
+    'No hometown',
+    'Misc.',
+  ];
+
+  const handleIssueSelect = (issue: string) => {
+    if (issue === 'Misc.') {
+      setShowCustomInput(!showCustomInput);
+    }
+
+    setSelectedIssues(prev => {
+      if (prev.includes(issue)) {
+        return prev.filter(i => i !== issue);
+      } else {
+        return [...prev, issue];
+      }
+    });
+  };
+
+  const handleSave = () => {
+    onIssueToggle(athleteId, selectedIssues, customNote);
+    setShowMenu(false);
+  };
+
+  const handleClear = () => {
+    setSelectedIssues([]);
+    setCustomNote('');
+    setShowCustomInput(false);
+    onIssueToggle(athleteId, [], '');
+    setShowMenu(false);
+  };
+
+  return (
+    <div className="relative">
+      <motion.button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowMenu(!showMenu);
+        }}
+        className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
+          hasIssue
+            ? 'bg-orange-500 text-white'
+            : 'bg-black/30 text-white hover:bg-black/50'
+        }`}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        aria-label="Report data quality issue"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      </motion.button>
+
+      {showMenu && (
+        <div
+          className="absolute bottom-full right-0 mb-2 w-64 bg-white rounded-lg shadow-2xl z-50 p-4"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <h4 className="font-semibold text-slate-900 mb-3">Data Quality Issues</h4>
+
+          <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+            {issueOptions.map(option => (
+              <label
+                key={option}
+                className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-2 rounded"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedIssues.includes(option)}
+                  onChange={() => handleIssueSelect(option)}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-700">{option}</span>
+              </label>
+            ))}
+
+            {showCustomInput && (
+              <textarea
+                value={customNote}
+                onChange={(e) => setCustomNote(e.target.value)}
+                placeholder="Describe the issue..."
+                className="w-full mt-2 p-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              Save
+            </button>
+            <button
+              onClick={handleClear}
+              className="flex-1 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
