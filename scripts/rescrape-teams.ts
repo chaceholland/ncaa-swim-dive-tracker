@@ -15,10 +15,8 @@ interface AthleteData {
 }
 
 // Teams to re-scrape with their roster URLs
-const teamsToScrape = [
-  { name: 'Texas A&M', url: 'https://12thman.com/sports/swimdive/roster' },
-  { name: 'Auburn', url: 'https://auburntigers.com/sports/swimming-diving/roster' },
-];
+// Add teams here as needed
+const teamsToScrape: Array<{ name: string; url: string }> = [];
 
 async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
   console.log(`\n🏊 Scraping ${teamName}...`);
@@ -49,6 +47,7 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
         position: 'strong',
         year: 'strong:first-of-type',
         hometown: 'generic',
+        getMensOnly: true, // Custom flag to find men's roster section
         filter: async (item: any) => {
           // Only get list items that have h3 athlete names
           const h3 = await item.$('h3 a');
@@ -118,8 +117,12 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
     ];
 
     for (const pattern of patterns) {
-      const container = await page.$(pattern.container);
+      let container = await page.$(pattern.container);
       if (!container) continue;
+
+      // For WMT Digital sites with both men's and women's rosters,
+      // we'll filter items after getting them, not change the container
+      const getMensOnly = (pattern as any).getMensOnly;
 
       let items = await container.$$(pattern.item);
       if (items.length === 0) continue;
@@ -133,6 +136,50 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
           }
         }
         items = filteredItems;
+      }
+
+      // Filter for men's roster only if requested
+      if (getMensOnly) {
+        const mensItems = [];
+        for (const item of items) {
+          const isInMensSection = await item.evaluate((el) => {
+            // Find Men's Roster heading
+            const headings = Array.from(document.querySelectorAll('h2'));
+            let mensHeading = null;
+            let nextHeadingAfterMens = null;
+
+            for (let i = 0; i < headings.length; i++) {
+              const text = headings[i].textContent || '';
+              const lowerText = text.toLowerCase().trim();
+              // Must check that it's specifically "men's" not "women's"
+              if ((lowerText === "men's roster" || lowerText === "men's team" ||
+                   (lowerText.includes("men's roster") && !lowerText.includes("women")))) {
+                mensHeading = headings[i];
+                // Find next h2 after men's roster
+                for (let j = i + 1; j < headings.length; j++) {
+                  nextHeadingAfterMens = headings[j];
+                  break;
+                }
+                break;
+              }
+            }
+
+            if (!mensHeading) return true; // No men's heading, include all
+
+            // Check if el comes after men's heading
+            const afterMens = (mensHeading.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+            // Check if el comes before next heading
+            const beforeNext = !nextHeadingAfterMens || (el.compareDocumentPosition(nextHeadingAfterMens) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+            return afterMens && beforeNext;
+          });
+
+          if (isInMensSection) {
+            mensItems.push(item);
+          }
+        }
+        items = mensItems;
       }
 
       if (items.length === 0) continue;
@@ -163,8 +210,18 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
           }
 
           // Get position/event (to determine swimmer vs diver)
-          const positionElement = await item.$(pattern.position);
-          const position = await positionElement?.textContent();
+          // For WMT Digital sites, check ALL strong elements for position
+          let position = '';
+          if ((pattern as any).getMensOnly && pattern.position === 'strong') {
+            // Get all strong elements and combine their text
+            const strongElements = await item.$$('strong');
+            const texts = await Promise.all(strongElements.map(el => el.textContent()));
+            position = texts.join(' ');
+          } else {
+            const positionElement = await item.$(pattern.position);
+            position = await positionElement?.textContent() || '';
+          }
+
           if (position) {
             const positionLower = position.toLowerCase();
             if (positionLower.includes('div')) {
@@ -209,6 +266,11 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
                 ? href
                 : new URL(href, rosterUrl).href;
             }
+          }
+
+          // Skip coaches/staff (they don't have class years)
+          if (!athlete.class_year) {
+            continue;
           }
 
           athletes.push(athlete);
