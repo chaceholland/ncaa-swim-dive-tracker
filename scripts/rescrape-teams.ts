@@ -101,8 +101,8 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
         item: '.s-person-card',
         name: 'h3',
         photo: 'img',
-        position: '.s-text-paragraph',
-        year: '.s-text-paragraph',
+        position: '.s-person-details__detail-wrapper',
+        year: '.s-person-details__detail-wrapper',
         hometown: '.s-person-card__content__location',
       },
       // Pattern 6: Prestige/Custom platforms
@@ -169,6 +169,8 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
             const positionLower = position.toLowerCase();
             if (positionLower.includes('div')) {
               athlete.athlete_type = 'diver';
+            } else if (positionLower.match(/free|breast|back|fly|butterfly|im|sprint|distance|medley|stroke/)) {
+              athlete.athlete_type = 'swimmer';
             } else if (positionLower.includes('swim')) {
               athlete.athlete_type = 'swimmer';
             }
@@ -183,6 +185,12 @@ async function scrapeTeam(teamName: string, rosterUrl: string, teamId: string) {
             else if (yearText.match(/sophomore|so|2nd/)) athlete.class_year = 'sophomore';
             else if (yearText.match(/junior|jr|3rd/)) athlete.class_year = 'junior';
             else if (yearText.match(/senior|sr|4th|fifth|5th|grad/)) athlete.class_year = 'senior';
+          }
+
+          // If has class year but no athlete type, default to swimmer
+          // (coaches/staff don't have class years)
+          if (athlete.class_year && !athlete.athlete_type) {
+            athlete.athlete_type = 'swimmer';
           }
 
           // Get hometown
