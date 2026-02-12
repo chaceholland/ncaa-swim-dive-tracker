@@ -412,7 +412,7 @@ function IssueButton({
   const [showCustomInput, setShowCustomInput] = useState(false);
 
   const issueOptions = [
-    'Woman',
+    'Female athlete',
     'Coach not needed',
     'Missing Headshot',
     'Missing position',
