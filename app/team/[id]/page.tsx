@@ -479,7 +479,7 @@ function IssueButton({
 
       {showMenu && (
         <div
-          className="absolute bottom-full right-0 mb-2 w-64 bg-white rounded-lg shadow-2xl z-50 p-4"
+          className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-2xl z-[60] p-4 border border-slate-200"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -487,7 +487,7 @@ function IssueButton({
         >
           <h4 className="font-semibold text-slate-900 mb-3">Data Quality Issues</h4>
 
-          <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+          <div className="space-y-2 mb-4 max-h-80 overflow-y-auto">
             {issueOptions.map(option => (
               <label
                 key={option}
