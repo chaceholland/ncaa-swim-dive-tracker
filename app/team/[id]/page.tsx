@@ -479,15 +479,15 @@ function IssueButton({
 
       {showMenu && (
         <div
-          className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-2xl z-[60] p-4 border border-slate-200"
+          className="absolute top-full right-0 mt-2 w-64 max-h-[32rem] bg-white rounded-lg shadow-2xl z-[60] p-4 border border-slate-200 flex flex-col"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
           }}
         >
-          <h4 className="font-semibold text-slate-900 mb-3">Data Quality Issues</h4>
+          <h4 className="font-semibold text-slate-900 mb-3 flex-shrink-0">Data Quality Issues</h4>
 
-          <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+          <div className="space-y-1 mb-3 max-h-40 overflow-y-auto border border-slate-100 rounded p-2 flex-shrink min-h-0">
             {issueOptions.map(option => (
               <label
                 key={option}
@@ -515,7 +515,7 @@ function IssueButton({
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0 mt-auto">
             <button
               onClick={handleSave}
               className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
