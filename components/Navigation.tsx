@@ -11,6 +11,7 @@ export interface NavigationProps {
   favoritesCount: number;
   onFavoritesClick: () => void;
   onMissingDataClick: () => void;
+  issuesCount?: number;
 }
 
 /**
@@ -22,6 +23,7 @@ export default function Navigation({
   favoritesCount,
   onFavoritesClick,
   onMissingDataClick,
+  issuesCount = 0,
 }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -82,12 +84,28 @@ export default function Navigation({
 
             {/* Missing Data Button */}
             <Button
-              variant="outline"
+              variant={issuesCount > 0 ? "primary" : "outline"}
               size="sm"
               onClick={onMissingDataClick}
-              className="hidden lg:flex border-slate-300 text-slate-700 hover:bg-slate-100"
+              className={cn(
+                "hidden lg:flex relative",
+                issuesCount > 0
+                  ? "bg-orange-600 hover:bg-orange-700 text-white"
+                  : "border-slate-300 text-slate-700 hover:bg-slate-100"
+              )}
             >
-              Missing Data
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span className="ml-2">Data Issues</span>
+              {issuesCount > 0 && (
+                <Badge
+                  variant="default"
+                  className="ml-2 bg-white/20 text-white border-white/30"
+                >
+                  {issuesCount}
+                </Badge>
+              )}
             </Button>
 
             {/* Favorites Button */}
