@@ -235,9 +235,25 @@ export default function TeamRosterPage() {
                 </button>
                 <button
                   onClick={handleCopyIssues}
-                  className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
                   Copy Issues
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`Clear all ${dataQualityIssues.length} data quality issues?`)) {
+                      setDataQualityIssues([]);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear All Issues
                 </button>
               </>
             )}
@@ -261,10 +277,15 @@ export default function TeamRosterPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer"
+                onClick={() => {
+                  if (athlete.profile_url) {
+                    window.open(athlete.profile_url, '_blank', 'noopener,noreferrer');
+                  }
+                }}
               >
                 {/* Athlete Photo */}
-                <div className="relative h-64 bg-slate-100">
+                <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
                   {athlete.photo_url ? (
                     <Image
                       src={athlete.photo_url}
@@ -360,7 +381,24 @@ export default function TeamRosterPage() {
 
                 {/* Athlete Info */}
                 <div className="p-4">
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">{athlete.name}</h3>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-lg font-bold text-slate-900">{athlete.name}</h3>
+                    {athlete.profile_url && (
+                      <svg
+                        className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    )}
+                  </div>
 
                   <div className="space-y-1 text-sm text-slate-600">
                     {athlete.class_year && (
@@ -410,9 +448,18 @@ function IssueButton({
   onIssueToggle: (athleteId: string, issues: string[], customNote?: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
-  const [selectedIssues, setSelectedIssues] = useState<string[]>(issueData?.issues || []);
-  const [customNote, setCustomNote] = useState(issueData?.customNote || '');
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [customNote, setCustomNote] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+
+  // Sync state with props when modal opens
+  useEffect(() => {
+    if (showMenu) {
+      setSelectedIssues(issueData?.issues || []);
+      setCustomNote(issueData?.customNote || '');
+      setShowCustomInput((issueData?.issues || []).includes('Misc.'));
+    }
+  }, [showMenu, issueData]);
 
   const issueOptions = [
     'Female athlete',
@@ -455,20 +502,19 @@ function IssueButton({
 
   return (
     <>
-      <motion.button
+      <button
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setShowMenu(!showMenu);
         }}
-        className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
+        className={`p-2 rounded-full backdrop-blur-sm transition-all hover:scale-110 active:scale-95 ${
           hasIssue
-            ? 'bg-orange-500 text-white'
+            ? 'bg-orange-500 text-white hover:bg-orange-600'
             : 'bg-black/30 text-white hover:bg-black/50'
         }`}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
         aria-label="Report data quality issue"
+        type="button"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -478,11 +524,11 @@ function IssueButton({
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           />
         </svg>
-      </motion.button>
+      </button>
 
       {showMenu && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowMenu(false)}
         >
           <div
@@ -492,14 +538,20 @@ function IssueButton({
               e.stopPropagation();
             }}
           >
-            <div className="p-6 border-b border-slate-200">
+            <div className="p-6 border-b border-slate-200 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900">Data Quality Issues</h3>
                 <button
-                  onClick={() => setShowMenu(false)}
-                  className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMenu(false);
+                  }}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-700 hover:text-slate-900 flex-shrink-0"
+                  aria-label="Close modal"
+                  type="button"
                 >
-                  <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
