@@ -154,7 +154,7 @@ export default function TeamRosterPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Team not found</h1>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.back()}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
             ← Back to teams
@@ -178,7 +178,7 @@ export default function TeamRosterPage() {
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.back()}
             className="absolute top-6 left-6 text-white/80 hover:text-white flex items-center gap-2 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

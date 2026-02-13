@@ -62,6 +62,11 @@ export default function TeamCard({
     onFavoriteToggle(team.id);
   };
 
+  // Save scroll position before navigating
+  const handleTeamClick = () => {
+    sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+  };
+
   // Determine which logo to use
   const logoUrl = imageError ? null : (team.logo_url || team.logo_fallback_url);
   const showInitials = !logoUrl || imageError;
@@ -84,7 +89,7 @@ export default function TeamCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/team/${team.id}`}>
+      <Link href={`/team/${team.id}`} onClick={handleTeamClick}>
         <motion.div
           className={cn(
             'relative h-52 rounded-2xl shadow-lg overflow-hidden cursor-pointer',

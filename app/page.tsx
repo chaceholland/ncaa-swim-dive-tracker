@@ -105,6 +105,18 @@ export default function Home() {
   const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<DataQualityIssue[]>('data-quality-issues', []);
   const [showIssuesModal, setShowIssuesModal] = useState(false);
 
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
+    if (savedScrollPosition) {
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+        sessionStorage.removeItem('homeScrollPosition');
+      }, 100);
+    }
+  }, []);
+
   // Fetch teams from Supabase
   useEffect(() => {
     async function fetchTeams() {
