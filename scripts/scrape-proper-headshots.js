@@ -16,7 +16,7 @@ const teamUrls = {
   'Missouri': 'https://mutigers.com/sports/swimming-and-diving/roster',
   'South Carolina': 'https://gamecocksonline.com/sports/swimming/roster/',
   'Tennessee': 'https://utsports.com/sports/mens-swimming-and-diving/roster',
-  'Texas A&M': 'https://12thman.com/sports/mens-swimming-and-diving/roster'
+  'Texas A&M': 'https://12thman.com/sports/swimdive/roster'
 };
 
 async function scrapeAthleteHeadshot(page, athleteUrl, athleteName) {
