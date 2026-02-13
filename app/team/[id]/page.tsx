@@ -8,6 +8,7 @@ import { getTeamGradient, getTeamInitials } from '@/lib/utils';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
 type DataQualityIssue = {
   athleteId: string;
@@ -451,6 +452,12 @@ function IssueButton({
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [customNote, setCustomNote] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Track if component is mounted (for SSR compatibility)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync state with props when modal opens
   useEffect(() => {
@@ -526,7 +533,7 @@ function IssueButton({
         </svg>
       </button>
 
-      {showMenu && (
+      {showMenu && mounted && createPortal(
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowMenu(false)}
@@ -603,7 +610,8 @@ function IssueButton({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
