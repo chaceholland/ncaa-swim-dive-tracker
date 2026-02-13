@@ -5,20 +5,62 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function checkACCTeams() {
-  const { data: teams } = await supabase
+async function checkTeam(teamName) {
+  const { data: team } = await supabase
     .from('teams')
-    .select('id, name, athlete_count')
-    .eq('conference', 'acc')
-    .order('name');
+    .select('id, logo_url')
+    .eq('name', teamName)
+    .single();
 
-  console.log('ACC Teams:\n');
-  teams.forEach(t => {
-    console.log(`- ${t.name} (ID: ${t.id}, ${t.athlete_count} athletes)`);
-  });
-  console.log(`\nTotal ACC teams: ${teams.length}`);
+  if (!team) {
+    console.log(`${teamName}: NOT FOUND`);
+    return;
+  }
 
-  return teams;
+  const { data: athletes } = await supabase
+    .from('athletes')
+    .select('name, photo_url, profile_url')
+    .eq('team_id', team.id)
+    .limit(1)
+    .single();
+
+  if (!athletes) {
+    console.log(`${teamName}: No athletes`);
+    return;
+  }
+
+  const hasAccLogo = athletes.photo_url?.includes('header_logo_conf_acc');
+  const hasProfileUrl = !!athletes.profile_url;
+
+  console.log(`${teamName}:`);
+  console.log(`  Photo: ${hasAccLogo ? '[ACC LOGO]' : athletes.photo_url?.substring(0, 60) || 'NULL'}`);
+  console.log(`  Profile URL: ${hasProfileUrl ? 'YES' : 'NO'}`);
 }
 
-checkACCTeams().catch(console.error);
+async function main() {
+  console.log('\nChecking ACC Teams:\n');
+
+  const accTeams = [
+    'Cal',
+    'SMU',
+    'Stanford',
+    'Virginia',
+    'Virginia Tech',
+    'Duke',
+    'North Carolina',
+    'NC State',
+    'Louisville',
+    'Miami',
+    'Georgia Tech',
+    'Clemson',
+    'Florida State',
+    'Notre Dame',
+    'Pittsburgh'
+  ];
+
+  for (const team of accTeams) {
+    await checkTeam(team);
+  }
+}
+
+main();

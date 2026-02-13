@@ -6,13 +6,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Correct roster URLs discovered
+// Team roster URLs
 const teamUrls = {
-  'Auburn': 'https://auburntigers.com/sports/swimming-diving/roster',
-  'Kentucky': 'https://ukathletics.com/sports/swimming/roster/',
-  'LSU': 'https://lsusports.net/sports/sd/roster/',
-  'Missouri': 'https://mutigers.com/sports/swimming-and-diving/roster',
-  'South Carolina': 'https://gamecocksonline.com/sports/swimming/roster/',
+  'Alabama': 'https://rolltide.com/sports/swimming-and-diving/roster',
+  'Auburn': 'https://auburntigers.com/sports/mens-swimming-diving/roster',
+  'Kentucky': 'https://ukathletics.com/sports/mens-swimming-and-diving/roster',
+  'LSU': 'https://lsusports.net/sports/mens-swimming-and-diving/roster',
+  'Missouri': 'https://mutigers.com/sports/mens-swimming-and-diving/roster',
+  'South Carolina': 'https://gamecocksonline.com/sports/mens-swimming-and-diving/roster',
 };
 
 async function scrapeAthletePhoto(page, athleteUrl) {
@@ -92,37 +93,21 @@ async function updateTeamAthletes(browser, teamName, rosterUrl) {
     await page.waitForTimeout(3000);
 
     // Get all athlete links
-    const rosterLinks = await page.evaluate((teamName) => {
+    const rosterLinks = await page.evaluate(() => {
       const links = [];
+      document.querySelectorAll('a[href*="/roster/"]').forEach(link => {
+        const href = link.href;
+        const name = link.textContent.trim();
 
-      // For LSU, extract athlete names from URLs since the page has combined men's/women's roster
-      if (teamName === 'LSU') {
-        document.querySelectorAll('a[href*="/roster/player/"]').forEach(bioLink => {
-          // Extract name from URL: /roster/player/jon-avdiu/ -> Jon Avdiu
-          const urlParts = bioLink.href.split('/roster/player/')[1]?.split('/')[0];
-          if (urlParts && !bioLink.href.includes('/coach')) {
-            const name = urlParts.split('-').map(word =>
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
-            links.push({ name, url: bioLink.href });
-          }
-        });
-      } else {
-        // For other teams, get all roster links
-        document.querySelectorAll('a[href*="/roster/"]').forEach(link => {
-          const href = link.href;
-          const name = link.textContent.trim();
-
-          if (name &&
-              name.length > 2 &&
-              name.length < 50 &&
-              !name.includes('Full Bio') &&
-              !href.includes('/coaches/') &&
-              !href.includes('/staff/')) {
-            links.push({ name, url: href });
-          }
-        });
-      }
+        if (name &&
+            name.length > 2 &&
+            name.length < 50 &&
+            !name.includes('Full Bio') &&
+            !href.includes('/coaches/') &&
+            !href.includes('/staff/')) {
+          links.push({ name, url: href });
+        }
+      });
 
       // Remove duplicates
       const unique = [];
@@ -135,7 +120,7 @@ async function updateTeamAthletes(browser, teamName, rosterUrl) {
       });
 
       return unique;
-    }, teamName);
+    });
 
     console.log(`Found ${rosterLinks.length} athletes on roster page\n`);
 
@@ -180,7 +165,7 @@ async function updateTeamAthletes(browser, teamName, rosterUrl) {
 async function main() {
   const browser = await chromium.launch({ headless: true });
 
-  console.log('\n🎯 FIXING REMAINING 5 TEAMS');
+  console.log('\n🎯 UPDATING EXISTING ATHLETES');
   console.log('Adding profile URLs and photos for athletes already in database...\n');
 
   const results = {};
