@@ -6,18 +6,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Correct roster URLs
+// Only Auburn and South Carolina
 const teamUrls = {
-  'Alabama': 'https://rolltide.com/sports/swimming-and-diving/roster',
   'Auburn': 'https://auburntigers.com/sports/swimming-diving/roster',
-  'Florida': 'https://floridagators.com/sports/mens-swimming-and-diving/roster',
-  'Georgia': 'https://georgiadogs.com/sports/msd/roster',
-  'Kentucky': 'https://ukathletics.com/sports/swimming/roster/',
-  'LSU': 'https://lsusports.net/sports/sd/roster/',
-  'Missouri': 'https://mutigers.com/sports/swimming-and-diving/roster',
   'South Carolina': 'https://gamecocksonline.com/sports/swimming/roster/',
-  'Tennessee': 'https://utsports.com/sports/mens-swimming-and-diving/roster',
-  'Texas A&M': 'https://12thman.com/sports/mens-swimming-and-diving/roster'
 };
 
 async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
@@ -48,7 +40,7 @@ async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
         return src;
       };
 
-      // Strategy 1: Try specific CSS selectors (works for Auburn)
+      // Strategy 1: Try specific CSS selectors
       const selectors = [
         'img.sidearm-roster-player-image',
         'img.roster-bio-photo__image',
@@ -58,6 +50,7 @@ async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
         'picture img',
         '.player-image img',
         '.s-person-details__media img',
+        '.roster-player-hero-image__image', // Auburn specific
       ];
 
       for (const selector of selectors) {
@@ -67,7 +60,7 @@ async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
         }
       }
 
-      // Strategy 2: Find by alt text matching athlete name (works for Georgia, Tennessee)
+      // Strategy 2: Find by alt text matching athlete name
       if (name) {
         const nameParts = name.toLowerCase().split(' ');
         const allImages = document.querySelectorAll('img');
@@ -76,9 +69,7 @@ async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
           const alt = (img.alt || '').toLowerCase();
           const src = img.src;
 
-          // Check if alt contains athlete name parts
           if (alt && nameParts.some(part => alt.includes(part)) && isValidHeadshot(src)) {
-            // Extra validation: make sure it's from athletic photo domain
             if (src.includes('sidearmdev.com') ||
                 src.includes('sidearm.sites') ||
                 src.includes('cloudfront') ||
@@ -86,6 +77,7 @@ async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
                 src.includes('roster') ||
                 src.includes('imgproxy') ||
                 src.includes('gamecocksonline') ||
+                src.includes('auburntigers') ||
                 src.includes('headshot')) {
               return upgradeQuality(src);
             }
@@ -111,7 +103,6 @@ async function scrapeAthletePhoto(page, athleteUrl, athleteName) {
       for (const img of allImages) {
         const src = img.src;
         if (isValidHeadshot(src) && athleticDomains.some(domain => src.includes(domain))) {
-          // Additional check: skip if image is too small (likely icon/logo)
           const width = img.naturalWidth || img.width;
           const height = img.naturalHeight || img.height;
           if (width >= 100 && height >= 100) {
@@ -142,7 +133,6 @@ async function rescrapeTeam(browser, teamName, rosterUrl) {
 
   const page = await browser.newPage();
 
-  // Get team
   const { data: team } = await supabase
     .from('teams')
     .select('id, logo_url')
@@ -155,7 +145,6 @@ async function rescrapeTeam(browser, teamName, rosterUrl) {
     return { updated: 0, photos: 0 };
   }
 
-  // Get all athletes
   const { data: athletes } = await supabase
     .from('athletes')
     .select('id, name, photo_url, profile_url')
@@ -168,39 +157,23 @@ async function rescrapeTeam(browser, teamName, rosterUrl) {
     await page.goto(rosterUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForTimeout(3000);
 
-    // Get all athlete links
     const rosterLinks = await page.evaluate((teamName) => {
       const links = [];
 
-      // For LSU, extract from URLs since combined roster
-      if (teamName === 'LSU') {
-        document.querySelectorAll('a[href*="/roster/player/"]').forEach(bioLink => {
-          const urlParts = bioLink.href.split('/roster/player/')[1]?.split('/')[0];
-          if (urlParts && !bioLink.href.includes('/coach')) {
-            const name = urlParts.split('-').map(word =>
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
-            links.push({ name, url: bioLink.href });
-          }
-        });
-      } else {
-        // For other teams, get all roster links
-        document.querySelectorAll('a[href*="/roster/"]').forEach(link => {
-          const href = link.href;
-          const name = link.textContent.trim();
+      document.querySelectorAll('a[href*="/roster/"]').forEach(link => {
+        const href = link.href;
+        const name = link.textContent.trim();
 
-          if (name &&
-              name.length > 2 &&
-              name.length < 50 &&
-              !name.includes('Full Bio') &&
-              !href.includes('/coaches/') &&
-              !href.includes('/staff/')) {
-            links.push({ name, url: href });
-          }
-        });
-      }
+        if (name &&
+            name.length > 2 &&
+            name.length < 50 &&
+            !name.includes('Full Bio') &&
+            !href.includes('/coaches/') &&
+            !href.includes('/staff/')) {
+          links.push({ name, url: href });
+        }
+      });
 
-      // Remove duplicates
       const unique = [];
       const seen = new Set();
       links.forEach(l => {
@@ -218,16 +191,14 @@ async function rescrapeTeam(browser, teamName, rosterUrl) {
     let updated = 0;
     let photosFound = 0;
 
-    // For each athlete in our database, get their photo
     for (const athlete of athletes) {
       const match = rosterLinks.find(r => r.name === athlete.name);
 
       if (match) {
         console.log(`  Processing: ${athlete.name}`);
 
-        // Scrape photo
         const photoUrl = await scrapeAthletePhoto(page, match.url, athlete.name);
-        
+
         if (photoUrl) {
           await supabase
             .from('athletes')
@@ -272,8 +243,8 @@ async function rescrapeTeam(browser, teamName, rosterUrl) {
 async function main() {
   const browser = await chromium.launch({ headless: true });
 
-  console.log('\n🔄 FIXING ALL TEAM HEADSHOTS');
-  console.log('Updating profile URLs and scraping headshots...\n');
+  console.log('\n🔄 FIXING AUBURN & SOUTH CAROLINA HEADSHOTS');
+  console.log('Re-scraping with improved lazy-load handling...\n');
 
   const results = {};
   for (const [teamName, rosterUrl] of Object.entries(teamUrls)) {
@@ -294,7 +265,7 @@ async function main() {
     totalPhotos += stats.photos;
   });
 
-  console.log(`\nGrand Total: ${totalUpdated} athletes updated, ${totalPhotos} headshots found`);
+  console.log(`\nTotal: ${totalUpdated} athletes updated, ${totalPhotos} headshots found`);
 }
 
 main();
