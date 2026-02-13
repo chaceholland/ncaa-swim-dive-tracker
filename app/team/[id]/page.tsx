@@ -272,6 +272,7 @@ export default function TeamRosterPage() {
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      unoptimized={athlete.photo_url.includes('auburntigers.com')}
                     />
                   ) : team.logo_url ? (
                     <div
@@ -451,7 +452,7 @@ function IssueButton({
   };
 
   return (
-    <div className="relative">
+    <>
       <motion.button
         onClick={(e) => {
           e.preventDefault();
@@ -479,58 +480,77 @@ function IssueButton({
 
       {showMenu && (
         <div
-          className="absolute top-full right-0 mt-2 w-64 max-h-[32rem] bg-white rounded-lg shadow-2xl z-[60] p-4 border border-slate-200 flex flex-col"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+          onClick={() => setShowMenu(false)}
         >
-          <h4 className="font-semibold text-slate-900 mb-3 flex-shrink-0">Data Quality Issues</h4>
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">Data Quality Issues</h3>
+                <button
+                  onClick={() => setShowMenu(false)}
+                  className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-          <div className="space-y-1 mb-3 max-h-40 overflow-y-auto border border-slate-100 rounded p-2 flex-shrink min-h-0">
-            {issueOptions.map(option => (
-              <label
-                key={option}
-                className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-2 rounded"
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-3">
+                {issueOptions.map(option => (
+                  <label
+                    key={option}
+                    className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-3 rounded-lg transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIssues.includes(option)}
+                      onChange={() => handleIssueSelect(option)}
+                      className="w-5 h-5 text-blue-600 bg-white border-2 border-slate-300 rounded cursor-pointer focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 checked:bg-blue-600 checked:border-blue-600 accent-blue-600"
+                    />
+                    <span className="text-base text-slate-700">{option}</span>
+                  </label>
+                ))}
+
+                {showCustomInput && (
+                  <textarea
+                    value={customNote}
+                    onChange={(e) => setCustomNote(e.target.value)}
+                    placeholder="Describe the issue..."
+                    className="w-full mt-3 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={4}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-200 flex gap-3">
+              <button
+                onClick={handleClear}
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
               >
-                <input
-                  type="checkbox"
-                  checked={selectedIssues.includes(option)}
-                  onChange={() => handleIssueSelect(option)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-slate-700">{option}</span>
-              </label>
-            ))}
-
-            {showCustomInput && (
-              <textarea
-                value={customNote}
-                onChange={(e) => setCustomNote(e.target.value)}
-                placeholder="Describe the issue..."
-                className="w-full mt-2 p-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
-          </div>
-
-          <div className="flex gap-2 flex-shrink-0 mt-auto">
-            <button
-              onClick={handleSave}
-              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              Save
-            </button>
-            <button
-              onClick={handleClear}
-              className="flex-1 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors"
-            >
-              Clear
-            </button>
+                Clear
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
