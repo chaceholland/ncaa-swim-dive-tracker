@@ -1,0 +1,540 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - main [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - heading "NCAA Swim & Dive" [level=1] [ref=e11]
+        - generic [ref=e12]:
+          - generic [ref=e14]:
+            - img [ref=e16]
+            - textbox "Search" [ref=e18]:
+              - /placeholder: Search athletes...
+          - button "Data Issues 29" [ref=e19]:
+            - img [ref=e20]
+            - generic [ref=e22]: Data Issues
+            - generic [ref=e23]: "29"
+          - button "Favorites" [ref=e24]:
+            - img [ref=e25]
+            - generic [ref=e27]: Favorites
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - heading "View Mode" [level=3] [ref=e31]
+        - generic [ref=e32]:
+          - button "Rosters 32" [ref=e33]:
+            - generic [ref=e34]: Rosters
+            - generic [ref=e35]: "32"
+          - button "Teams 32" [ref=e36]:
+            - generic [ref=e37]: Teams
+            - generic [ref=e38]: "32"
+      - generic [ref=e39]:
+        - heading "Conference" [level=3] [ref=e40]
+        - generic [ref=e41]:
+          - button "All 32" [ref=e42]:
+            - generic [ref=e43]: All
+            - generic [ref=e44]: "32"
+          - button "SEC 5" [ref=e45]:
+            - generic [ref=e46]: SEC
+            - generic [ref=e47]: "5"
+          - button "Big Ten 7" [ref=e48]:
+            - generic [ref=e49]: Big Ten
+            - generic [ref=e50]: "7"
+          - button "ACC 3" [ref=e51]:
+            - generic [ref=e52]: ACC
+            - generic [ref=e53]: "3"
+          - button "Big 12 4" [ref=e54]:
+            - generic [ref=e55]: Big 12
+            - generic [ref=e56]: "4"
+          - button "Ivy 7" [ref=e57]:
+            - generic [ref=e58]: Ivy
+            - generic [ref=e59]: "7"
+          - button "Other 6" [ref=e60]:
+            - generic [ref=e61]: Other
+            - generic [ref=e62]: "6"
+      - generic [ref=e63]:
+        - heading "Athlete Type" [level=3] [ref=e64]
+        - generic [ref=e65]:
+          - button "All Athletes 1120" [ref=e66]:
+            - generic [ref=e67]: All Athletes
+            - generic [ref=e68]: "1120"
+          - button "Swimmers 0" [ref=e69]:
+            - generic [ref=e70]: Swimmers
+            - generic [ref=e71]: "0"
+          - button "Divers 0" [ref=e72]:
+            - generic [ref=e73]: Divers
+            - generic [ref=e74]: "0"
+    - generic [ref=e75]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - heading "NCAA D1 Swimming & Diving Tracker" [level=1] [ref=e81]:
+            - text: NCAA D1 Swimming
+            - text: "& Diving Tracker"
+          - paragraph [ref=e82]: Track every team and athlete across Division I men's swimming and diving
+        - generic [ref=e83]:
+          - generic [ref=e85]:
+            - generic [ref=e86]: "53"
+            - generic [ref=e87]: D1 Men's Teams
+          - generic [ref=e90]:
+            - generic [ref=e91]: 1,628
+            - generic [ref=e92]: Athletes
+          - generic [ref=e95]:
+            - generic [ref=e96]: "45"
+            - generic [ref=e97]: Teams with Data
+        - generic [ref=e99]: "Last updated: February 12, 2026"
+      - generic [ref=e101]:
+        - generic [ref=e102]: Scroll
+        - img [ref=e103]
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - heading "SEC" [level=2] [ref=e108]
+        - paragraph [ref=e109]: 5 teams · 152 athletes
+      - generic [ref=e110]:
+        - link "Texas logo Add to favorites Texas SEC 33 athletes" [ref=e112] [cursor=pointer]:
+          - /url: /team/cb5d10ad-96c2-4786-b693-d797dd2e4765
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - img "Texas logo" [ref=e122]
+              - button "Add to favorites" [ref=e123]:
+                - img [ref=e125]
+            - generic [ref=e127]:
+              - heading "Texas" [level=3] [ref=e128]
+              - generic [ref=e130]: SEC
+            - generic [ref=e131]:
+              - generic [ref=e132]: "33"
+              - generic [ref=e133]: athletes
+        - link "Florida logo Add to favorites Florida SEC 33 athletes" [ref=e135] [cursor=pointer]:
+          - /url: /team/1eb50dc6-e388-4779-82d9-168d363afe57
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - img "Florida logo" [ref=e145]
+              - button "Add to favorites" [ref=e146]:
+                - img [ref=e148]
+            - generic [ref=e150]:
+              - heading "Florida" [level=3] [ref=e151]
+              - generic [ref=e153]: SEC
+            - generic [ref=e154]:
+              - generic [ref=e155]: "33"
+              - generic [ref=e156]: athletes
+        - link "Texas A&M logo Add to favorites Texas A&M SEC 33 athletes" [ref=e158] [cursor=pointer]:
+          - /url: /team/1ec93695-55f4-4f09-819a-632d399aeb5f
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - img "Texas A&M logo" [ref=e168]
+              - button "Add to favorites" [ref=e169]:
+                - img [ref=e171]
+            - generic [ref=e173]:
+              - heading "Texas A&M" [level=3] [ref=e174]
+              - generic [ref=e176]: SEC
+            - generic [ref=e177]:
+              - generic [ref=e178]: "33"
+              - generic [ref=e179]: athletes
+        - link "Tennessee logo Add to favorites Tennessee SEC 31 athletes" [ref=e181] [cursor=pointer]:
+          - /url: /team/944ecb5e-12c4-4b2f-8837-01fb51de768f
+          - generic [ref=e186]:
+            - generic [ref=e187]:
+              - img "Tennessee logo" [ref=e191]
+              - button "Add to favorites" [ref=e192]:
+                - img [ref=e194]
+            - generic [ref=e196]:
+              - heading "Tennessee" [level=3] [ref=e197]
+              - generic [ref=e199]: SEC
+            - generic [ref=e200]:
+              - generic [ref=e201]: "31"
+              - generic [ref=e202]: athletes
+        - link "Auburn logo Add to favorites Auburn SEC 22 athletes" [ref=e204] [cursor=pointer]:
+          - /url: /team/3dc2371f-b2b8-41ae-994c-eb8089efd4ee
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - img "Auburn logo" [ref=e214]
+              - button "Add to favorites" [ref=e215]:
+                - img [ref=e217]
+            - generic [ref=e219]:
+              - heading "Auburn" [level=3] [ref=e220]
+              - generic [ref=e222]: SEC
+            - generic [ref=e223]:
+              - generic [ref=e224]: "22"
+              - generic [ref=e225]: athletes
+    - generic [ref=e227]:
+      - generic [ref=e228]:
+        - heading "Big Ten" [level=2] [ref=e229]
+        - paragraph [ref=e230]: 7 teams · 243 athletes
+      - generic [ref=e231]:
+        - link "Indiana logo Add to favorites Indiana Big Ten 45 athletes" [ref=e233] [cursor=pointer]:
+          - /url: /team/d616979d-9715-472b-9011-e84792891c3a
+          - generic [ref=e238]:
+            - generic [ref=e239]:
+              - img "Indiana logo" [ref=e243]
+              - button "Add to favorites" [ref=e244]:
+                - img [ref=e246]
+            - generic [ref=e248]:
+              - heading "Indiana" [level=3] [ref=e249]
+              - generic [ref=e251]: Big Ten
+            - generic [ref=e252]:
+              - generic [ref=e253]: "45"
+              - generic [ref=e254]: athletes
+        - link "USC logo Add to favorites USC Big Ten 41 athletes" [ref=e256] [cursor=pointer]:
+          - /url: /team/a9296847-7634-49ca-8306-f35b9660a81e
+          - generic [ref=e261]:
+            - generic [ref=e262]:
+              - img "USC logo" [ref=e266]
+              - button "Add to favorites" [ref=e267]:
+                - img [ref=e269]
+            - generic [ref=e271]:
+              - heading "USC" [level=3] [ref=e272]
+              - generic [ref=e274]: Big Ten
+            - generic [ref=e275]:
+              - generic [ref=e276]: "41"
+              - generic [ref=e277]: athletes
+        - link "Minnesota logo Add to favorites Minnesota Big Ten 33 athletes" [ref=e279] [cursor=pointer]:
+          - /url: /team/5dee32d6-b7a6-4920-b77d-9b4a57d530f0
+          - generic [ref=e284]:
+            - generic [ref=e285]:
+              - img "Minnesota logo" [ref=e289]
+              - button "Add to favorites" [ref=e290]:
+                - img [ref=e292]
+            - generic [ref=e294]:
+              - heading "Minnesota" [level=3] [ref=e295]
+              - generic [ref=e297]: Big Ten
+            - generic [ref=e298]:
+              - generic [ref=e299]: "33"
+              - generic [ref=e300]: athletes
+        - link "Northwestern logo Add to favorites Northwestern Big Ten 32 athletes" [ref=e302] [cursor=pointer]:
+          - /url: /team/3953c786-9502-4f74-9b96-1a0a3a009fcc
+          - generic [ref=e307]:
+            - generic [ref=e308]:
+              - img "Northwestern logo" [ref=e312]
+              - button "Add to favorites" [ref=e313]:
+                - img [ref=e315]
+            - generic [ref=e317]:
+              - heading "Northwestern" [level=3] [ref=e318]
+              - generic [ref=e320]: Big Ten
+            - generic [ref=e321]:
+              - generic [ref=e322]: "32"
+              - generic [ref=e323]: athletes
+        - link "Wisconsin logo Add to favorites Wisconsin Big Ten 31 athletes" [ref=e325] [cursor=pointer]:
+          - /url: /team/4da80bad-a768-4305-9361-0e0730f3931d
+          - generic [ref=e330]:
+            - generic [ref=e331]:
+              - img "Wisconsin logo" [ref=e335]
+              - button "Add to favorites" [ref=e336]:
+                - img [ref=e338]
+            - generic [ref=e340]:
+              - heading "Wisconsin" [level=3] [ref=e341]
+              - generic [ref=e343]: Big Ten
+            - generic [ref=e344]:
+              - generic [ref=e345]: "31"
+              - generic [ref=e346]: athletes
+        - link "Penn State logo Add to favorites Penn State Big Ten 31 athletes" [ref=e348] [cursor=pointer]:
+          - /url: /team/5b23cdca-c9c4-43d7-912c-86e24a8660f7
+          - generic [ref=e353]:
+            - generic [ref=e354]:
+              - img "Penn State logo" [ref=e358]
+              - button "Add to favorites" [ref=e359]:
+                - img [ref=e361]
+            - generic [ref=e363]:
+              - heading "Penn State" [level=3] [ref=e364]
+              - generic [ref=e366]: Big Ten
+            - generic [ref=e367]:
+              - generic [ref=e368]: "31"
+              - generic [ref=e369]: athletes
+        - link "Michigan logo Add to favorites Michigan Big Ten 30 athletes" [ref=e371] [cursor=pointer]:
+          - /url: /team/257b579d-8a09-40b4-be6d-c51774ebfc87
+          - generic [ref=e376]:
+            - generic [ref=e377]:
+              - img "Michigan logo" [ref=e381]
+              - button "Add to favorites" [ref=e382]:
+                - img [ref=e384]
+            - generic [ref=e386]:
+              - heading "Michigan" [level=3] [ref=e387]
+              - generic [ref=e389]: Big Ten
+            - generic [ref=e390]:
+              - generic [ref=e391]: "30"
+              - generic [ref=e392]: athletes
+    - generic [ref=e394]:
+      - generic [ref=e395]:
+        - heading "ACC" [level=2] [ref=e396]
+        - paragraph [ref=e397]: 3 teams · 98 athletes
+      - generic [ref=e398]:
+        - link "Cal logo Add to favorites Cal ACC 43 athletes" [ref=e400] [cursor=pointer]:
+          - /url: /team/f9deceb5-42db-46e8-aab1-6b8dab2bfd0c
+          - generic [ref=e405]:
+            - generic [ref=e406]:
+              - img "Cal logo" [ref=e410]
+              - button "Add to favorites" [ref=e411]:
+                - img [ref=e413]
+            - generic [ref=e415]:
+              - heading "Cal" [level=3] [ref=e416]
+              - generic [ref=e418]: ACC
+            - generic [ref=e419]:
+              - generic [ref=e420]: "43"
+              - generic [ref=e421]: athletes
+        - link "SMU logo Add to favorites SMU ACC 31 athletes" [ref=e423] [cursor=pointer]:
+          - /url: /team/35f0b011-8eb5-41f4-b711-3952aa96d941
+          - generic [ref=e428]:
+            - generic [ref=e429]:
+              - img "SMU logo" [ref=e433]
+              - button "Add to favorites" [ref=e434]:
+                - img [ref=e436]
+            - generic [ref=e438]:
+              - heading "SMU" [level=3] [ref=e439]
+              - generic [ref=e441]: ACC
+            - generic [ref=e442]:
+              - generic [ref=e443]: "31"
+              - generic [ref=e444]: athletes
+        - link "Stanford logo Add to favorites Stanford ACC 24 athletes" [ref=e446] [cursor=pointer]:
+          - /url: /team/0f1717e7-7b79-4566-be44-fb106b8b2409
+          - generic [ref=e451]:
+            - generic [ref=e452]:
+              - img "Stanford logo" [ref=e456]
+              - button "Add to favorites" [ref=e457]:
+                - img [ref=e459]
+            - generic [ref=e461]:
+              - heading "Stanford" [level=3] [ref=e462]
+              - generic [ref=e464]: ACC
+            - generic [ref=e465]:
+              - generic [ref=e466]: "24"
+              - generic [ref=e467]: athletes
+    - generic [ref=e469]:
+      - generic [ref=e470]:
+        - heading "Big 12" [level=2] [ref=e471]
+        - paragraph [ref=e472]: 4 teams · 152 athletes
+      - generic [ref=e473]:
+        - link "Utah logo Add to favorites Utah Big 12 42 athletes" [ref=e475] [cursor=pointer]:
+          - /url: /team/115bb511-0e08-4134-8b23-a4cbc15a059e
+          - generic [ref=e480]:
+            - generic [ref=e481]:
+              - img "Utah logo" [ref=e485]
+              - button "Add to favorites" [ref=e486]:
+                - img [ref=e488]
+            - generic [ref=e490]:
+              - heading "Utah" [level=3] [ref=e491]
+              - generic [ref=e493]: Big 12
+            - generic [ref=e494]:
+              - generic [ref=e495]: "42"
+              - generic [ref=e496]: athletes
+        - link "West Virginia logo Add to favorites West Virginia Big 12 41 athletes" [ref=e498] [cursor=pointer]:
+          - /url: /team/e8c9c00a-aede-4601-8703-16f59bbcc622
+          - generic [ref=e503]:
+            - generic [ref=e504]:
+              - img "West Virginia logo" [ref=e508]
+              - button "Add to favorites" [ref=e509]:
+                - img [ref=e511]
+            - generic [ref=e513]:
+              - heading "West Virginia" [level=3] [ref=e514]
+              - generic [ref=e516]: Big 12
+            - generic [ref=e517]:
+              - generic [ref=e518]: "41"
+              - generic [ref=e519]: athletes
+        - link "Arizona State logo Add to favorites Arizona State Big 12 40 athletes" [ref=e521] [cursor=pointer]:
+          - /url: /team/a301f49f-0e5d-478c-9921-9ae285210c98
+          - generic [ref=e526]:
+            - generic [ref=e527]:
+              - img "Arizona State logo" [ref=e531]
+              - button "Add to favorites" [ref=e532]:
+                - img [ref=e534]
+            - generic [ref=e536]:
+              - heading "Arizona State" [level=3] [ref=e537]
+              - generic [ref=e539]: Big 12
+            - generic [ref=e540]:
+              - generic [ref=e541]: "40"
+              - generic [ref=e542]: athletes
+        - link "Arizona logo Add to favorites Arizona Big 12 29 athletes" [ref=e544] [cursor=pointer]:
+          - /url: /team/596774fe-c45e-40e8-a282-ac1381a82582
+          - generic [ref=e549]:
+            - generic [ref=e550]:
+              - img "Arizona logo" [ref=e554]
+              - button "Add to favorites" [ref=e555]:
+                - img [ref=e557]
+            - generic [ref=e559]:
+              - heading "Arizona" [level=3] [ref=e560]
+              - generic [ref=e562]: Big 12
+            - generic [ref=e563]:
+              - generic [ref=e564]: "29"
+              - generic [ref=e565]: athletes
+    - generic [ref=e567]:
+      - generic [ref=e568]:
+        - heading "Ivy League" [level=2] [ref=e569]
+        - paragraph [ref=e570]: 7 teams · 243 athletes
+      - generic [ref=e571]:
+        - link "Princeton logo Add to favorites Princeton Ivy League 47 athletes" [ref=e573] [cursor=pointer]:
+          - /url: /team/4857b897-ff97-4577-b323-dcf6dcd2e6ec
+          - generic [ref=e578]:
+            - generic [ref=e579]:
+              - img "Princeton logo" [ref=e583]
+              - button "Add to favorites" [ref=e584]:
+                - img [ref=e586]
+            - generic [ref=e588]:
+              - heading "Princeton" [level=3] [ref=e589]
+              - generic [ref=e591]: Ivy League
+            - generic [ref=e592]:
+              - generic [ref=e593]: "47"
+              - generic [ref=e594]: athletes
+        - link "Columbia logo Add to favorites Columbia Ivy League 41 athletes" [ref=e596] [cursor=pointer]:
+          - /url: /team/1c38be57-2437-4c3d-9fc5-e1ca5b0ca9d8
+          - generic [ref=e601]:
+            - generic [ref=e602]:
+              - img "Columbia logo" [ref=e606]
+              - button "Add to favorites" [ref=e607]:
+                - img [ref=e609]
+            - generic [ref=e611]:
+              - heading "Columbia" [level=3] [ref=e612]
+              - generic [ref=e614]: Ivy League
+            - generic [ref=e615]:
+              - generic [ref=e616]: "41"
+              - generic [ref=e617]: athletes
+        - link "Dartmouth logo Add to favorites Dartmouth Ivy League 36 athletes" [ref=e619] [cursor=pointer]:
+          - /url: /team/af99722d-2d6c-44c6-976c-301a8f417630
+          - generic [ref=e624]:
+            - generic [ref=e625]:
+              - img "Dartmouth logo" [ref=e629]
+              - button "Add to favorites" [ref=e630]:
+                - img [ref=e632]
+            - generic [ref=e634]:
+              - heading "Dartmouth" [level=3] [ref=e635]
+              - generic [ref=e637]: Ivy League
+            - generic [ref=e638]:
+              - generic [ref=e639]: "36"
+              - generic [ref=e640]: athletes
+        - link "Brown logo Add to favorites Brown Ivy League 35 athletes" [ref=e642] [cursor=pointer]:
+          - /url: /team/feb9221b-1736-4505-9778-cd9dcc621a66
+          - generic [ref=e647]:
+            - generic [ref=e648]:
+              - img "Brown logo" [ref=e652]
+              - button "Add to favorites" [ref=e653]:
+                - img [ref=e655]
+            - generic [ref=e657]:
+              - heading "Brown" [level=3] [ref=e658]
+              - generic [ref=e660]: Ivy League
+            - generic [ref=e661]:
+              - generic [ref=e662]: "35"
+              - generic [ref=e663]: athletes
+        - link "Cornell logo Add to favorites Cornell Ivy League 30 athletes" [ref=e665] [cursor=pointer]:
+          - /url: /team/26af86f5-febb-46fa-bdb1-6b658c12539f
+          - generic [ref=e670]:
+            - generic [ref=e671]:
+              - img "Cornell logo" [ref=e675]
+              - button "Add to favorites" [ref=e676]:
+                - img [ref=e678]
+            - generic [ref=e680]:
+              - heading "Cornell" [level=3] [ref=e681]
+              - generic [ref=e683]: Ivy League
+            - generic [ref=e684]:
+              - generic [ref=e685]: "30"
+              - generic [ref=e686]: athletes
+        - link "Penn logo Add to favorites Penn Ivy League 28 athletes" [ref=e688] [cursor=pointer]:
+          - /url: /team/d3d3082c-2582-43b5-8159-870e368fb990
+          - generic [ref=e693]:
+            - generic [ref=e694]:
+              - img "Penn logo" [ref=e698]
+              - button "Add to favorites" [ref=e699]:
+                - img [ref=e701]
+            - generic [ref=e703]:
+              - heading "Penn" [level=3] [ref=e704]
+              - generic [ref=e706]: Ivy League
+            - generic [ref=e707]:
+              - generic [ref=e708]: "28"
+              - generic [ref=e709]: athletes
+        - link "Loading... Harvard logo Add to favorites Harvard Ivy League 26 athletes" [ref=e711] [cursor=pointer]:
+          - /url: /team/6391ec44-4438-4ca0-b49d-7ac3b055e898
+          - generic [ref=e716]:
+            - generic [ref=e717]:
+              - generic [ref=e719]:
+                - generic [ref=e721]: Loading...
+                - img "Harvard logo" [ref=e722]
+              - button "Add to favorites" [ref=e723]:
+                - img [ref=e725]
+            - generic [ref=e727]:
+              - heading "Harvard" [level=3] [ref=e728]
+              - generic [ref=e730]: Ivy League
+            - generic [ref=e731]:
+              - generic [ref=e732]: "26"
+              - generic [ref=e733]: athletes
+    - generic [ref=e735]:
+      - generic [ref=e736]:
+        - heading "Patriot League" [level=2] [ref=e737]
+        - paragraph [ref=e738]: 2 teams · 89 athletes
+      - generic [ref=e739]:
+        - link "Navy logo Add to favorites Navy Patriot League 48 athletes" [ref=e741] [cursor=pointer]:
+          - /url: /team/8ddc3d2c-b655-4b96-b950-adfb3304bdab
+          - generic [ref=e746]:
+            - generic [ref=e747]:
+              - img "Navy logo" [ref=e751]
+              - button "Add to favorites" [ref=e752]:
+                - img [ref=e754]
+            - generic [ref=e756]:
+              - heading "Navy" [level=3] [ref=e757]
+              - generic [ref=e759]: Patriot League
+            - generic [ref=e760]:
+              - generic [ref=e761]: "48"
+              - generic [ref=e762]: athletes
+        - link "Army logo Add to favorites Army Patriot League 41 athletes" [ref=e764] [cursor=pointer]:
+          - /url: /team/8d2a2191-0e0e-491e-9c40-eef2e3a9b684
+          - generic [ref=e769]:
+            - generic [ref=e770]:
+              - img "Army logo" [ref=e774]
+              - button "Add to favorites" [ref=e775]:
+                - img [ref=e777]
+            - generic [ref=e779]:
+              - heading "Army" [level=3] [ref=e780]
+              - generic [ref=e782]: Patriot League
+            - generic [ref=e783]:
+              - generic [ref=e784]: "41"
+              - generic [ref=e785]: athletes
+    - generic [ref=e787]:
+      - generic [ref=e788]:
+        - heading "Other Conferences" [level=2] [ref=e789]
+        - paragraph [ref=e790]: 4 teams · 143 athletes
+      - generic [ref=e791]:
+        - link "Southern Illinois logo Add to favorites Southern Illinois Missouri Valley 48 athletes" [ref=e793] [cursor=pointer]:
+          - /url: /team/9009a842-7905-4569-b8a2-4214edb4b4b1
+          - generic [ref=e798]:
+            - generic [ref=e799]:
+              - img "Southern Illinois logo" [ref=e803]
+              - button "Add to favorites" [ref=e804]:
+                - img [ref=e806]
+            - generic [ref=e808]:
+              - heading "Southern Illinois" [level=3] [ref=e809]
+              - generic [ref=e811]: Missouri Valley
+            - generic [ref=e812]:
+              - generic [ref=e813]: "48"
+              - generic [ref=e814]: athletes
+        - link "UNLV logo Add to favorites UNLV Mountain West 37 athletes" [ref=e816] [cursor=pointer]:
+          - /url: /team/9ded9ee7-142a-4ecf-bf7a-fe17b84b26fa
+          - generic [ref=e821]:
+            - generic [ref=e822]:
+              - img "UNLV logo" [ref=e826]
+              - button "Add to favorites" [ref=e827]:
+                - img [ref=e829]
+            - generic [ref=e831]:
+              - heading "UNLV" [level=3] [ref=e832]
+              - generic [ref=e834]: Mountain West
+            - generic [ref=e835]:
+              - generic [ref=e836]: "37"
+              - generic [ref=e837]: athletes
+        - link "Towson logo Add to favorites Towson Colonial Athletic 29 athletes" [ref=e839] [cursor=pointer]:
+          - /url: /team/40bb102c-8cc9-4371-9924-b559116c912b
+          - generic [ref=e844]:
+            - generic [ref=e845]:
+              - img "Towson logo" [ref=e849]
+              - button "Add to favorites" [ref=e850]:
+                - img [ref=e852]
+            - generic [ref=e854]:
+              - heading "Towson" [level=3] [ref=e855]
+              - generic [ref=e857]: Colonial Athletic
+            - generic [ref=e858]:
+              - generic [ref=e859]: "29"
+              - generic [ref=e860]: athletes
+        - link "George Washington logo Add to favorites George Washington Atlantic 10 29 athletes" [ref=e862] [cursor=pointer]:
+          - /url: /team/bb774317-50e4-4b06-a001-ec2d4851a3a4
+          - generic [ref=e867]:
+            - generic [ref=e868]:
+              - img "George Washington logo" [ref=e872]
+              - button "Add to favorites" [ref=e873]:
+                - img [ref=e875]
+            - generic [ref=e877]:
+              - heading "George Washington" [level=3] [ref=e878]
+              - generic [ref=e880]: Atlantic 10
+            - generic [ref=e881]:
+              - generic [ref=e882]: "29"
+              - generic [ref=e883]: athletes

@@ -272,6 +272,8 @@ export default function TeamRosterPage() {
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      quality={95}
+                      priority={index < 8}
                       unoptimized={athlete.photo_url.includes('auburntigers.com')}
                     />
                   ) : team.logo_url ? (

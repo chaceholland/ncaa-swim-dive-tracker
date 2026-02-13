@@ -1,0 +1,545 @@
+- generic [ref=e1]:
+  - alert [ref=e266]
+  - generic [ref=e1057]:
+    - generic [ref=e1060]:
+      - button "Back to Teams" [ref=e1061]:
+        - img [ref=e1062]
+        - text: Back to Teams
+      - generic [ref=e1064]:
+        - img "Texas A&M logo" [ref=e1066]
+        - generic [ref=e1067]:
+          - heading "Texas A&M" [level=1] [ref=e1068]
+          - paragraph [ref=e1069]: SEC
+          - paragraph [ref=e1070]: 33 Athletes
+    - generic [ref=e1071]:
+      - generic [ref=e1072]:
+        - heading "Roster" [level=2] [ref=e1073]
+        - generic [ref=e1074]:
+          - button "Show Issues (9)" [ref=e1075]
+          - button "Copy Issues" [ref=e1076]
+      - generic [ref=e1077]:
+        - generic [ref=e1078]:
+          - generic [ref=e1079]:
+            - img "AJ Robinson" [ref=e1080]
+            - generic [ref=e1081]: Swimmer
+            - generic [ref=e1082]:
+              - button "Add to favorites" [ref=e1083]:
+                - img [ref=e1084]
+              - button "Report data quality issue" [ref=e1087]:
+                - img [ref=e1088]
+          - generic [ref=e1090]:
+            - heading "AJ Robinson" [level=3] [ref=e1091]
+            - generic [ref=e1092]:
+              - paragraph [ref=e1093]: freshman
+              - paragraph [ref=e1094]:
+                - img [ref=e1095]
+                - text: Hometown College Station, Texas
+        - generic [ref=e1098]:
+          - generic [ref=e1099]:
+            - img "Alejandro Michelena" [ref=e1100]
+            - generic [ref=e1101]: Swimmer
+            - generic [ref=e1102]:
+              - button "Add to favorites" [ref=e1103]:
+                - img [ref=e1104]
+              - button "Report data quality issue" [ref=e1107]:
+                - img [ref=e1108]
+          - generic [ref=e1110]:
+            - heading "Alejandro Michelena" [level=3] [ref=e1111]
+            - generic [ref=e1112]:
+              - paragraph [ref=e1113]: freshman
+              - paragraph [ref=e1114]:
+                - img [ref=e1115]
+                - text: Hometown Klein, TexasLast School Cain
+        - generic [ref=e1118]:
+          - generic [ref=e1119]:
+            - img "Batuhan Filiz" [ref=e1120]
+            - generic [ref=e1121]: Swimmer
+            - generic [ref=e1122]:
+              - button "Add to favorites" [ref=e1123]:
+                - img [ref=e1124]
+              - button "Report data quality issue" [ref=e1127]:
+                - img [ref=e1128]
+          - generic [ref=e1130]:
+            - heading "Batuhan Filiz" [level=3] [ref=e1131]
+            - generic [ref=e1132]:
+              - paragraph [ref=e1133]: freshman
+              - paragraph [ref=e1134]:
+                - img [ref=e1135]
+                - text: Hometown Ankara, TurkeyLast School Ugur Batikent Anatalion High School
+        - generic [ref=e1138]:
+          - generic [ref=e1139]:
+            - img "Ben Scholl" [ref=e1140]
+            - generic [ref=e1141]: Swimmer
+            - generic [ref=e1142]:
+              - button "Add to favorites" [ref=e1143]:
+                - img [ref=e1144]
+              - button "Report data quality issue" [ref=e1147]:
+                - img [ref=e1148]
+          - generic [ref=e1150]:
+            - heading "Ben Scholl" [level=3] [ref=e1151]
+            - generic [ref=e1152]:
+              - paragraph [ref=e1153]: freshman
+              - paragraph [ref=e1154]:
+                - img [ref=e1155]
+                - text: Hometown Cypress, TexasLast School Cy Woods
+        - generic [ref=e1158]:
+          - generic [ref=e1159]:
+            - img "Ben Sytsma" [ref=e1160]
+            - generic [ref=e1161]: Swimmer
+            - generic [ref=e1162]:
+              - button "Add to favorites" [ref=e1163]:
+                - img [ref=e1164]
+              - button "Report data quality issue" [ref=e1167]:
+                - img [ref=e1168]
+          - generic [ref=e1170]:
+            - heading "Ben Sytsma" [level=3] [ref=e1171]
+            - generic [ref=e1172]:
+              - paragraph [ref=e1173]: freshman
+              - paragraph [ref=e1174]:
+                - img [ref=e1175]
+                - text: Hometown Ada, Mich.Last School Grand Rapids Christian
+        - generic [ref=e1178]:
+          - generic [ref=e1179]:
+            - img "Bucky Gettys" [ref=e1180]
+            - generic [ref=e1181]: Swimmer
+            - generic [ref=e1182]:
+              - button "Add to favorites" [ref=e1183]:
+                - img [ref=e1184]
+              - button "Report data quality issue" [ref=e1187]:
+                - img [ref=e1188]
+          - generic [ref=e1190]:
+            - heading "Bucky Gettys" [level=3] [ref=e1191]
+            - generic [ref=e1192]:
+              - paragraph [ref=e1193]: freshman
+              - paragraph [ref=e1194]:
+                - img [ref=e1195]
+                - text: Hometown Round Rock, TexasLast School Round Rock
+        - generic [ref=e1198]:
+          - generic [ref=e1199]:
+            - img "Charles Reuter" [ref=e1200]
+            - generic [ref=e1201]: Diver
+            - generic [ref=e1202]:
+              - button "Add to favorites" [ref=e1203]:
+                - img [ref=e1204]
+              - button "Report data quality issue" [ref=e1207]:
+                - img [ref=e1208]
+          - generic [ref=e1210]:
+            - heading "Charles Reuter" [level=3] [ref=e1211]
+            - generic [ref=e1212]:
+              - paragraph [ref=e1213]: sophomore
+              - paragraph [ref=e1214]:
+                - img [ref=e1215]
+                - text: Hometown Glendora, Calif.Last School Glendora
+        - generic [ref=e1218]:
+          - generic [ref=e1219]:
+            - img "Chase Swearingen" [ref=e1220]
+            - generic [ref=e1221]: Swimmer
+            - generic [ref=e1222]:
+              - button "Add to favorites" [ref=e1223]:
+                - img [ref=e1224]
+              - button "Report data quality issue" [ref=e1227]:
+                - img [ref=e1228]
+          - generic [ref=e1230]:
+            - heading "Chase Swearingen" [level=3] [ref=e1231]
+            - generic [ref=e1232]:
+              - paragraph [ref=e1233]: sophomore
+              - paragraph [ref=e1234]:
+                - img [ref=e1235]
+                - text: Hometown Westerville, OhioLast School Central
+        - generic [ref=e1238]:
+          - generic [ref=e1239]:
+            - img "Connor Foote" [ref=e1240]
+            - generic [ref=e1241]: Swimmer
+            - generic [ref=e1242]:
+              - button "Add to favorites" [ref=e1243]:
+                - img [ref=e1244]
+              - button "Report data quality issue" [ref=e1247]:
+                - img [ref=e1248]
+          - generic [ref=e1250]:
+            - heading "Connor Foote" [level=3] [ref=e1251]
+            - generic [ref=e1252]:
+              - paragraph [ref=e1253]: freshman
+              - paragraph [ref=e1254]:
+                - img [ref=e1255]
+                - text: Hometown San Antonio, TexasLast School Alamo Heights
+        - generic [ref=e1258]:
+          - generic [ref=e1259]:
+            - img "Corbyn Reyes" [ref=e1260]
+            - generic [ref=e1261]: Swimmer
+            - generic [ref=e1262]:
+              - button "Add to favorites" [ref=e1263]:
+                - img [ref=e1264]
+              - generic [ref=e1266]:
+                - button "Report data quality issue" [active] [ref=e1267]:
+                  - img [ref=e1268]
+                - generic [ref=e1701]:
+                  - heading "Data Quality Issues" [level=4] [ref=e1702]
+                  - generic [ref=e1703]:
+                    - generic [ref=e1704] [cursor=pointer]:
+                      - checkbox "Female athlete" [ref=e1705]
+                      - generic [ref=e1706]: Female athlete
+                    - generic [ref=e1707] [cursor=pointer]:
+                      - checkbox "Coach not needed" [ref=e1708]
+                      - generic [ref=e1709]: Coach not needed
+                    - generic [ref=e1710] [cursor=pointer]:
+                      - checkbox "Missing Headshot" [ref=e1711]
+                      - generic [ref=e1712]: Missing Headshot
+                    - generic [ref=e1713] [cursor=pointer]:
+                      - checkbox "Missing position" [ref=e1714]
+                      - generic [ref=e1715]: Missing position
+                    - generic [ref=e1716] [cursor=pointer]:
+                      - checkbox "Missing URL link" [ref=e1717]
+                      - generic [ref=e1718]: Missing URL link
+                    - generic [ref=e1719] [cursor=pointer]:
+                      - checkbox "Wrong classification" [ref=e1720]
+                      - generic [ref=e1721]: Wrong classification
+                    - generic [ref=e1722] [cursor=pointer]:
+                      - checkbox "No height/weight" [ref=e1723]
+                      - generic [ref=e1724]: No height/weight
+                    - generic [ref=e1725] [cursor=pointer]:
+                      - checkbox "No hometown" [ref=e1726]
+                      - generic [ref=e1727]: No hometown
+                    - generic [ref=e1728] [cursor=pointer]:
+                      - checkbox "Misc." [ref=e1729]
+                      - generic [ref=e1730]: Misc.
+                  - generic [ref=e1731]:
+                    - button "Save" [ref=e1732]
+                    - button "Clear" [ref=e1733]
+          - generic [ref=e1270]:
+            - heading "Corbyn Reyes" [level=3] [ref=e1271]
+            - generic [ref=e1272]:
+              - paragraph [ref=e1273]: senior
+              - paragraph [ref=e1274]:
+                - img [ref=e1275]
+                - text: "Hometown Keller, TexasLast School Southlake CarrollPrevious School Previous School: Air Force"
+        - generic [ref=e1278]:
+          - generic [ref=e1279]:
+            - img "Daniil Pancerevas" [ref=e1280]
+            - generic [ref=e1281]: Swimmer
+            - generic [ref=e1282]:
+              - button "Add to favorites" [ref=e1283]:
+                - img [ref=e1284]
+              - button "Report data quality issue" [ref=e1287]:
+                - img [ref=e1288]
+          - generic [ref=e1290]:
+            - heading "Daniil Pancerevas" [level=3] [ref=e1291]
+            - generic [ref=e1292]:
+              - paragraph [ref=e1293]: freshman
+              - paragraph [ref=e1294]:
+                - img [ref=e1295]
+                - text: "Hometown Klaipeda, LithuaniaLast School Klaipedos Žaliakalnio GymnasiumPrevious School Previous School: Virginia Tech"
+        - generic [ref=e1298]:
+          - generic [ref=e1299]:
+            - img "Duncan Sherrard" [ref=e1300]
+            - generic [ref=e1301]:
+              - button "Add to favorites" [ref=e1302]:
+                - img [ref=e1303]
+              - button "Report data quality issue" [ref=e1306]:
+                - img [ref=e1307]
+          - heading "Duncan Sherrard" [level=3] [ref=e1310]
+        - generic [ref=e1311]:
+          - generic [ref=e1312]:
+            - img "Emilio Trevino Laureano" [ref=e1313]
+            - generic [ref=e1314]: Diver
+            - generic [ref=e1315]:
+              - button "Add to favorites" [ref=e1316]:
+                - img [ref=e1317]
+              - button "Report data quality issue" [ref=e1320]:
+                - img [ref=e1321]
+          - generic [ref=e1323]:
+            - heading "Emilio Trevino Laureano" [level=3] [ref=e1324]
+            - generic [ref=e1325]:
+              - paragraph [ref=e1326]: freshman
+              - paragraph [ref=e1327]:
+                - img [ref=e1328]
+                - text: Hometown Monterrey, Nuevo León, México
+        - generic [ref=e1331]:
+          - generic [ref=e1332]:
+            - img "Gerald Peña" [ref=e1333]
+            - generic [ref=e1334]:
+              - button "Add to favorites" [ref=e1335]:
+                - img [ref=e1336]
+              - button "Report data quality issue" [ref=e1339]:
+                - img [ref=e1340]
+          - heading "Gerald Peña" [level=3] [ref=e1343]
+        - generic [ref=e1344]:
+          - generic [ref=e1345]:
+            - img "Hayden Miller" [ref=e1346]
+            - generic [ref=e1347]: Swimmer
+            - generic [ref=e1348]:
+              - button "Add to favorites" [ref=e1349]:
+                - img [ref=e1350]
+              - button "Report data quality issue" [ref=e1353]:
+                - img [ref=e1354]
+          - generic [ref=e1356]:
+            - heading "Hayden Miller" [level=3] [ref=e1357]
+            - generic [ref=e1358]:
+              - paragraph [ref=e1359]: freshman
+              - paragraph [ref=e1360]:
+                - img [ref=e1361]
+                - text: "Hometown Houston, TexasLast School Cy CreekPrevious School Previous School: Florida"
+        - generic [ref=e1364]:
+          - generic [ref=e1365]:
+            - img "Jack Madoch" [ref=e1366]
+            - generic [ref=e1367]: Swimmer
+            - generic [ref=e1368]:
+              - button "Add to favorites" [ref=e1369]:
+                - img [ref=e1370]
+              - button "Report data quality issue" [ref=e1373]:
+                - img [ref=e1374]
+          - generic [ref=e1376]:
+            - heading "Jack Madoch" [level=3] [ref=e1377]
+            - generic [ref=e1378]:
+              - paragraph [ref=e1379]: freshman
+              - paragraph [ref=e1380]:
+                - img [ref=e1381]
+                - text: "Hometown Middleton, Wis.Last School MiddletonPrevious School Previous School: Virginia"
+        - generic [ref=e1384]:
+          - generic [ref=e1385]:
+            - img "Jamie Lew" [ref=e1386]
+            - generic [ref=e1387]:
+              - button "Add to favorites" [ref=e1388]:
+                - img [ref=e1389]
+              - button "Report data quality issue" [ref=e1392]:
+                - img [ref=e1393]
+          - heading "Jamie Lew" [level=3] [ref=e1396]
+        - generic [ref=e1397]:
+          - generic [ref=e1398]:
+            - img "Jaxon Bowshire" [ref=e1399]
+            - generic [ref=e1400]: Diver
+            - generic [ref=e1401]:
+              - button "Add to favorites" [ref=e1402]:
+                - img [ref=e1403]
+              - button "Report data quality issue" [ref=e1406]:
+                - img [ref=e1407]
+          - generic [ref=e1409]:
+            - heading "Jaxon Bowshire" [level=3] [ref=e1410]
+            - generic [ref=e1411]:
+              - paragraph [ref=e1412]: sophomore
+              - paragraph [ref=e1413]:
+                - img [ref=e1414]
+                - text: Hometown Adelaide, Australia
+        - generic [ref=e1417]:
+          - generic [ref=e1418]:
+            - img "Jay Lerew" [ref=e1419]
+            - generic [ref=e1420]: Diver
+            - generic [ref=e1421]:
+              - button "Add to favorites" [ref=e1422]:
+                - img [ref=e1423]
+              - button "Report data quality issue" [ref=e1426]:
+                - img [ref=e1427]
+          - heading "Jay Lerew" [level=3] [ref=e1430]
+        - generic [ref=e1431]:
+          - generic [ref=e1432]:
+            - img "Jeff Bro" [ref=e1433]
+            - generic [ref=e1434]: Diver
+            - generic [ref=e1435]:
+              - button "Add to favorites" [ref=e1436]:
+                - img [ref=e1437]
+              - button "Report data quality issue" [ref=e1440]:
+                - img [ref=e1441]
+          - heading "Jeff Bro" [level=3] [ref=e1444]
+        - generic [ref=e1445]:
+          - generic [ref=e1446]:
+            - img "John Simmons" [ref=e1447]
+            - generic [ref=e1448]: Swimmer
+            - generic [ref=e1449]:
+              - button "Add to favorites" [ref=e1450]:
+                - img [ref=e1451]
+              - button "Report data quality issue" [ref=e1454]:
+                - img [ref=e1455]
+          - generic [ref=e1457]:
+            - heading "John Simmons" [level=3] [ref=e1458]
+            - generic [ref=e1459]:
+              - paragraph [ref=e1460]: freshman
+              - paragraph [ref=e1461]:
+                - img [ref=e1462]
+                - text: Hometown Humble, TexasLast School Atascocita
+        - generic [ref=e1465]:
+          - generic [ref=e1466]:
+            - img "Lane White" [ref=e1467]
+            - generic [ref=e1468]: Swimmer
+            - generic [ref=e1469]:
+              - button "Add to favorites" [ref=e1470]:
+                - img [ref=e1471]
+              - button "Report data quality issue" [ref=e1474]:
+                - img [ref=e1475]
+          - generic [ref=e1477]:
+            - heading "Lane White" [level=3] [ref=e1478]
+            - generic [ref=e1479]:
+              - paragraph [ref=e1480]: freshman
+              - paragraph [ref=e1481]:
+                - img [ref=e1482]
+                - text: Hometown Prosper, TexasLast School Prosper
+        - generic [ref=e1485]:
+          - generic [ref=e1486]:
+            - img "Logan Brown" [ref=e1487]
+            - generic [ref=e1488]: Swimmer
+            - generic [ref=e1489]:
+              - button "Add to favorites" [ref=e1490]:
+                - img [ref=e1491]
+              - button "Report data quality issue" [ref=e1494]:
+                - img [ref=e1495]
+          - generic [ref=e1497]:
+            - heading "Logan Brown" [level=3] [ref=e1498]
+            - generic [ref=e1499]:
+              - paragraph [ref=e1500]: junior
+              - paragraph [ref=e1501]:
+                - img [ref=e1502]
+                - text: Hometown Sugar Land, TexasLast School Clements
+        - generic [ref=e1505]:
+          - generic [ref=e1506]:
+            - img "Matthew Aigner" [ref=e1507]
+            - generic [ref=e1508]: Diver
+            - generic [ref=e1509]:
+              - button "Add to favorites" [ref=e1510]:
+                - img [ref=e1511]
+              - button "Report data quality issue" [ref=e1514]:
+                - img [ref=e1515]
+          - generic [ref=e1517]:
+            - heading "Matthew Aigner" [level=3] [ref=e1518]
+            - generic [ref=e1519]:
+              - paragraph [ref=e1520]: senior
+              - paragraph [ref=e1521]:
+                - img [ref=e1522]
+                - text: Hometown Katy, TexasLast School Tompkins
+        - generic [ref=e1525]:
+          - generic [ref=e1526]:
+            - img "Maximiliano Vega Cuevas" [ref=e1527]
+            - generic [ref=e1528]: Swimmer
+            - generic [ref=e1529]:
+              - button "Add to favorites" [ref=e1530]:
+                - img [ref=e1531]
+              - button "Report data quality issue" [ref=e1534]:
+                - img [ref=e1535]
+          - generic [ref=e1537]:
+            - heading "Maximiliano Vega Cuevas" [level=3] [ref=e1538]
+            - generic [ref=e1539]:
+              - paragraph [ref=e1540]: senior
+              - paragraph [ref=e1541]:
+                - img [ref=e1542]
+                - text: Hometown Playas de Rosarito, MexicoLast School Santillana Del Mar
+        - generic [ref=e1545]:
+          - generic [ref=e1546]:
+            - img "Munzy Kabbara" [ref=e1547]
+            - generic [ref=e1548]: Swimmer
+            - generic [ref=e1549]:
+              - button "Add to favorites" [ref=e1550]:
+                - img [ref=e1551]
+              - button "Report data quality issue" [ref=e1554]:
+                - img [ref=e1555]
+          - generic [ref=e1557]:
+            - heading "Munzy Kabbara" [level=3] [ref=e1558]
+            - generic [ref=e1559]:
+              - paragraph [ref=e1560]: senior
+              - paragraph [ref=e1561]:
+                - img [ref=e1562]
+                - text: Hometown Cypress, TexasLast School Cy Woods
+        - generic [ref=e1565]:
+          - generic [ref=e1566]:
+            - img "Nathan Stone" [ref=e1567]
+            - generic [ref=e1568]: Diver
+            - generic [ref=e1569]:
+              - button "Add to favorites" [ref=e1570]:
+                - img [ref=e1571]
+              - button "Report data quality issue" [ref=e1574]:
+                - img [ref=e1575]
+          - generic [ref=e1577]:
+            - heading "Nathan Stone" [level=3] [ref=e1578]
+            - generic [ref=e1579]:
+              - paragraph [ref=e1580]: sophomore
+              - paragraph [ref=e1581]:
+                - img [ref=e1582]
+                - text: Hometown Southlake, TexasLast School Carroll
+        - generic [ref=e1585]:
+          - generic [ref=e1586]:
+            - img "Ophir Rakah" [ref=e1587]
+            - generic [ref=e1588]: Swimmer
+            - generic [ref=e1589]:
+              - button "Add to favorites" [ref=e1590]:
+                - img [ref=e1591]
+              - button "Report data quality issue" [ref=e1594]:
+                - img [ref=e1595]
+          - generic [ref=e1597]:
+            - heading "Ophir Rakah" [level=3] [ref=e1598]
+            - generic [ref=e1599]:
+              - paragraph [ref=e1600]: freshman
+              - paragraph [ref=e1601]:
+                - img [ref=e1602]
+                - text: Hometown Rishon Lezion, IsraelLast School Hof HaSharon
+        - generic [ref=e1605]:
+          - generic [ref=e1606]:
+            - img "Roberto Bonilla Flores" [ref=e1607]
+            - generic [ref=e1608]: Swimmer
+            - generic [ref=e1609]:
+              - button "Add to favorites" [ref=e1610]:
+                - img [ref=e1611]
+              - button "Report data quality issue" [ref=e1614]:
+                - img [ref=e1615]
+          - generic [ref=e1617]:
+            - heading "Roberto Bonilla Flores" [level=3] [ref=e1618]
+            - generic [ref=e1619]:
+              - paragraph [ref=e1620]: junior
+              - paragraph [ref=e1621]:
+                - img [ref=e1622]
+                - text: Hometown Guatemala City, GuatemalaLast School The Woodlands
+        - generic [ref=e1625]:
+          - generic [ref=e1626]:
+            - img "Seth Reno" [ref=e1627]
+            - generic [ref=e1628]: Swimmer
+            - generic [ref=e1629]:
+              - button "Add to favorites" [ref=e1630]:
+                - img [ref=e1631]
+              - button "Report data quality issue" [ref=e1634]:
+                - img [ref=e1635]
+          - generic [ref=e1637]:
+            - heading "Seth Reno" [level=3] [ref=e1638]
+            - generic [ref=e1639]:
+              - paragraph [ref=e1640]: freshman
+              - paragraph [ref=e1641]:
+                - img [ref=e1642]
+                - text: Hometown League City, TexasLast School Clear Falls
+        - generic [ref=e1645]:
+          - generic [ref=e1646]:
+            - img "Wes Foltz" [ref=e1647]
+            - generic [ref=e1648]: Swimmer
+            - generic [ref=e1649]:
+              - button "Add to favorites" [ref=e1650]:
+                - img [ref=e1651]
+              - button "Report data quality issue" [ref=e1654]:
+                - img [ref=e1655]
+          - generic [ref=e1657]:
+            - heading "Wes Foltz" [level=3] [ref=e1658]
+            - paragraph [ref=e1660]: sophomore
+        - generic [ref=e1661]:
+          - generic [ref=e1662]:
+            - img "Wes Foster" [ref=e1663]
+            - generic [ref=e1664]: Swimmer
+            - generic [ref=e1665]:
+              - button "Add to favorites" [ref=e1666]:
+                - img [ref=e1667]
+              - button "Report data quality issue" [ref=e1670]:
+                - img [ref=e1671]
+          - generic [ref=e1673]:
+            - heading "Wes Foster" [level=3] [ref=e1674]
+            - generic [ref=e1675]:
+              - paragraph [ref=e1676]: freshman
+              - paragraph [ref=e1677]:
+                - img [ref=e1678]
+                - text: Hometown The Woodlands, TexasLast School The Woodlands
+        - generic [ref=e1681]:
+          - generic [ref=e1682]:
+            - img "Will Heck" [ref=e1683]
+            - generic [ref=e1684]: Swimmer
+            - generic [ref=e1685]:
+              - button "Add to favorites" [ref=e1686]:
+                - img [ref=e1687]
+              - button "Report data quality issue" [ref=e1690]:
+                - img [ref=e1691]
+          - generic [ref=e1693]:
+            - heading "Will Heck" [level=3] [ref=e1694]
+            - generic [ref=e1695]:
+              - paragraph [ref=e1696]: junior
+              - paragraph [ref=e1697]:
+                - img [ref=e1698]
+                - text: "Hometown Jacksonville, Fla.Last School BollesPrevious School Previous School: NC State"
