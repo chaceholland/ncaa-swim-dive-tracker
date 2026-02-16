@@ -1,0 +1,218 @@
+[
+  {
+    "name": "LSU",
+    "total": 23,
+    "missing": 21,
+    "athletes": [
+      "Caleb Ellis",
+      "Jon Avdiu",
+      "Luke Stibrich",
+      "Jacob Pishko",
+      "Simon Meubry",
+      "Andrew Garon",
+      "Silas Beth",
+      "Albert Bouley",
+      "Guilherme Camossato",
+      "Diggory Dillingham",
+      "Stepan Goncharov",
+      "Stuart Higdon",
+      "Jere Hribar",
+      "Travis Keith",
+      "Jovan Lekic",
+      "Volodymyr Lisovets",
+      "Carson Paul",
+      "Karlo Percinic",
+      "Collin Quickstad",
+      "Nikola Simic",
+      "Levi Thome"
+    ]
+  },
+  {
+    "name": "North Carolina",
+    "total": 12,
+    "missing": 12,
+    "athletes": [
+      "Conrad Eck",
+      "Chris Booler",
+      "David Melnychuk",
+      "David Quaresma",
+      "Rodolfo Vazquez Montano",
+      "Sean Setzer",
+      "Adam Maraana",
+      "Michael Cotter",
+      "Chris Booler",
+      "Ben Delmar",
+      "Sam Huggins",
+      "Josh Parent"
+    ]
+  },
+  {
+    "name": "Arizona State",
+    "total": 40,
+    "missing": 5,
+    "athletes": [
+      "Marc Briggs",
+      "Greg Werner",
+      "Herbie Behm",
+      "Vivian Wilson",
+      "Parker Reynolds"
+    ]
+  },
+  {
+    "name": "Notre Dame",
+    "total": 23,
+    "missing": 5,
+    "athletes": [
+      "Max McHugh",
+      "Michael Norment",
+      "Josh Arndt",
+      "Trevor Carroll",
+      "Benedict Nguyen"
+    ]
+  },
+  {
+    "name": "Penn State",
+    "total": 31,
+    "missing": 4,
+    "athletes": [
+      "Hollie Bonewit-Cron",
+      "Bill Williams",
+      "Tommy Johnson",
+      "Ricky Dove"
+    ]
+  },
+  {
+    "name": "Purdue",
+    "total": 21,
+    "missing": 4,
+    "athletes": [
+      "James Bretscher",
+      "David Boudia",
+      "Mark Bradshaw",
+      "Adam Soldati"
+    ]
+  },
+  {
+    "name": "TCU",
+    "total": 17,
+    "missing": 4,
+    "athletes": [
+      "Elliott Dillon",
+      "Bryn James",
+      "Oliver Cazaly",
+      "David Ekdahl"
+    ]
+  },
+  {
+    "name": "Duke",
+    "total": 14,
+    "missing": 3,
+    "athletes": [
+      "Charles Berman",
+      "Yannis Schattman",
+      "Tynan O'Donoghue"
+    ]
+  },
+  {
+    "name": "Georgia Tech",
+    "total": 9,
+    "missing": 3,
+    "athletes": [
+      "Justin Yuan",
+      "John Ames",
+      "Max Fowler"
+    ]
+  },
+  {
+    "name": "South Carolina",
+    "total": 16,
+    "missing": 3,
+    "athletes": [
+      "Zachary Malek",
+      "Josh McCall",
+      "Tyler Hoard"
+    ]
+  },
+  {
+    "name": "Alabama",
+    "total": 13,
+    "missing": 2,
+    "athletes": [
+      "Paul Mathews",
+      "Peter Edin"
+    ]
+  },
+  {
+    "name": "Indiana",
+    "total": 38,
+    "missing": 2,
+    "athletes": [
+      "Paul Kelley",
+      "Will Sowle"
+    ]
+  },
+  {
+    "name": "Army",
+    "total": 36,
+    "missing": 1,
+    "athletes": [
+      "Joseph Frullaney"
+    ]
+  },
+  {
+    "name": "Boston College",
+    "total": 17,
+    "missing": 1,
+    "athletes": [
+      "Chris Morgan"
+    ]
+  },
+  {
+    "name": "Florida",
+    "total": 26,
+    "missing": 1,
+    "athletes": [
+      "Jack Neiman"
+    ]
+  },
+  {
+    "name": "NC State",
+    "total": 16,
+    "missing": 1,
+    "athletes": [
+      "Calvin LeBlanc"
+    ]
+  },
+  {
+    "name": "Ohio State",
+    "total": 16,
+    "missing": 1,
+    "athletes": [
+      "Patrick Hemingway"
+    ]
+  },
+  {
+    "name": "Pittsburgh",
+    "total": 20,
+    "missing": 1,
+    "athletes": [
+      "Cameron Cash"
+    ]
+  },
+  {
+    "name": "Virginia Tech",
+    "total": 12,
+    "missing": 1,
+    "athletes": [
+      "Nathan Cox"
+    ]
+  },
+  {
+    "name": "Yale",
+    "total": 14,
+    "missing": 1,
+    "athletes": [
+      "Ray Wipfli"
+    ]
+  }
+]
