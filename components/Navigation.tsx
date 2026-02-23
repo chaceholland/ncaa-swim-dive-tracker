@@ -250,6 +250,17 @@ export default function Navigation({
                       ))}
                     </div>
                   )}
+
+                  {/* View all results button */}
+                  <button
+                    className="w-full py-3 text-sm text-blue-600 hover:bg-blue-50 font-medium transition-colors border-t border-gray-100"
+                    onClick={() => {
+                      router.push(`/search?q=${encodeURIComponent(dropdownQuery)}`);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    View all results for "{dropdownQuery}" →
+                  </button>
                 </div>
               )}
             </div>
@@ -479,6 +490,17 @@ export default function Navigation({
                     ))}
                   </div>
                 )}
+
+                {/* View all results button */}
+                <button
+                  className="w-full py-3 text-sm text-blue-600 hover:bg-blue-50 font-medium transition-colors border-t border-gray-100"
+                  onClick={() => {
+                    router.push(`/search?q=${encodeURIComponent(dropdownQuery)}`);
+                    setShowDropdown(false);
+                  }}
+                >
+                  View all results for "{dropdownQuery}" →
+                </button>
               </div>
             )}
           </div>
