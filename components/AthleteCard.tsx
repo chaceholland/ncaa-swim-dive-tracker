@@ -125,7 +125,7 @@ export default function AthleteCard({
       className="relative cursor-pointer"
       onClick={() => router.push(`/athlete/${athlete.id}`)}
     >
-      <div className="w-[280px] h-[380px] bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
+      <div className="w-full bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
         {/* Team color accent bar */}
         <div
           className="h-1 w-full"
