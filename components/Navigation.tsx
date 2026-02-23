@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import SearchBar from '@/components/ui/SearchBar';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { supabase } from '@/lib/supabase/client';
+import type { Athlete, Team } from '@/lib/supabase/types';
 
 export interface NavigationProps {
   onSearch: (query: string) => void;
@@ -25,7 +28,13 @@ export default function Navigation({
   onMissingDataClick,
   issuesCount = 0,
 }: NavigationProps) {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [dropdownQuery, setDropdownQuery] = useState('');
+  const [athleteResults, setAthleteResults] = useState<Athlete[]>([]);
+  const [teamResults, setTeamResults] = useState<(Pick<Team, 'id' | 'name' | 'logo_url' | 'conference_display_name'>)[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +43,46 @@ export default function Navigation({
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!dropdownQuery.trim() || dropdownQuery.length < 2) {
+      setAthleteResults([]);
+      setTeamResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const q = `%${dropdownQuery.trim()}%`;
+      const [{ data: athletes }, { data: teams }] = await Promise.all([
+        supabase
+          .from('athletes')
+          .select('id, name, photo_url, class_year, athlete_type, team_id')
+          .ilike('name', q)
+          .limit(5),
+        supabase
+          .from('teams')
+          .select('id, name, logo_url, conference_display_name')
+          .ilike('name', q)
+          .limit(3),
+      ]);
+      setAthleteResults(athletes || []);
+      setTeamResults(teams || []);
+      setShowDropdown(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [dropdownQuery]);
+
+  // Click outside handler
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
@@ -73,13 +122,136 @@ export default function Navigation({
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Search Bar */}
-            <div className="w-64 lg:w-80">
-              <SearchBar
-                onSearch={onSearch}
-                placeholder="Search athletes..."
-                className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500"
-              />
+            {/* Search Bar with Dropdown */}
+            <div ref={dropdownRef} className="relative w-64 lg:w-80">
+              <div className="relative w-full">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={dropdownQuery}
+                  onChange={(e) => setDropdownQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && dropdownQuery.trim()) {
+                      router.push(`/search?q=${encodeURIComponent(dropdownQuery.trim())}`);
+                      setShowDropdown(false);
+                      setDropdownQuery('');
+                    } else if (e.key === 'Escape') {
+                      setShowDropdown(false);
+                    }
+                  }}
+                  placeholder="Search athletes or teams..."
+                  className={cn(
+                    'w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg',
+                    'text-slate-900 placeholder:text-slate-500',
+                    'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
+                    'transition-all duration-200'
+                  )}
+                  aria-label="Search"
+                />
+              </div>
+
+              {/* Dropdown Results */}
+              {showDropdown && (athleteResults.length > 0 || teamResults.length > 0) && (
+                <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                  {/* Teams Section */}
+                  {teamResults.length > 0 && (
+                    <div className="border-b border-slate-100">
+                      <div className="px-4 py-2 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Teams
+                      </div>
+                      {teamResults.map((team) => (
+                        <button
+                          key={team.id}
+                          onClick={() => {
+                            router.push(`/team/${team.id}`);
+                            setShowDropdown(false);
+                            setDropdownQuery('');
+                          }}
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+                        >
+                          {team.logo_url ? (
+                            <Image
+                              src={team.logo_url}
+                              alt={team.name}
+                              width={32}
+                              height={32}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+                              <span className="text-slate-600 text-sm font-semibold">
+                                {team.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-slate-900 truncate">{team.name}</div>
+                            <div className="text-xs text-slate-500">{team.conference_display_name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Athletes Section */}
+                  {athleteResults.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Athletes
+                      </div>
+                      {athleteResults.map((athlete) => (
+                        <button
+                          key={athlete.id}
+                          onClick={() => {
+                            router.push(`/athlete/${athlete.id}`);
+                            setShowDropdown(false);
+                            setDropdownQuery('');
+                          }}
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+                        >
+                          {athlete.photo_url ? (
+                            <Image
+                              src={athlete.photo_url}
+                              alt={athlete.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+                              <span className="text-slate-600 text-sm font-semibold">
+                                {athlete.name.split(' ').map(n => n[0]).join('')}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-slate-900 truncate">{athlete.name}</div>
+                            <div className="text-xs text-slate-500 capitalize">
+                              {athlete.class_year} • {athlete.athlete_type}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Missing Data Button */}
@@ -180,11 +352,136 @@ export default function Navigation({
 
         {/* Mobile Search Bar - Below main nav */}
         <div className="md:hidden pb-3">
-          <SearchBar
-            onSearch={onSearch}
-            placeholder="Search athletes..."
-            className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500"
-          />
+          <div ref={dropdownRef} className="relative">
+            <div className="relative w-full">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={dropdownQuery}
+                onChange={(e) => setDropdownQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && dropdownQuery.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(dropdownQuery.trim())}`);
+                    setShowDropdown(false);
+                    setDropdownQuery('');
+                  } else if (e.key === 'Escape') {
+                    setShowDropdown(false);
+                  }
+                }}
+                placeholder="Search athletes or teams..."
+                className={cn(
+                  'w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg',
+                  'text-slate-900 placeholder:text-slate-500',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
+                  'transition-all duration-200'
+                )}
+                aria-label="Search"
+              />
+            </div>
+
+            {/* Dropdown Results */}
+            {showDropdown && (athleteResults.length > 0 || teamResults.length > 0) && (
+              <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                {/* Teams Section */}
+                {teamResults.length > 0 && (
+                  <div className="border-b border-slate-100">
+                    <div className="px-4 py-2 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Teams
+                    </div>
+                    {teamResults.map((team) => (
+                      <button
+                        key={team.id}
+                        onClick={() => {
+                          router.push(`/team/${team.id}`);
+                          setShowDropdown(false);
+                          setDropdownQuery('');
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        {team.logo_url ? (
+                          <Image
+                            src={team.logo_url}
+                            alt={team.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+                            <span className="text-slate-600 text-sm font-semibold">
+                              {team.name.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-slate-900 truncate">{team.name}</div>
+                          <div className="text-xs text-slate-500">{team.conference_display_name}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Athletes Section */}
+                {athleteResults.length > 0 && (
+                  <div>
+                    <div className="px-4 py-2 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Athletes
+                    </div>
+                    {athleteResults.map((athlete) => (
+                      <button
+                        key={athlete.id}
+                        onClick={() => {
+                          router.push(`/athlete/${athlete.id}`);
+                          setShowDropdown(false);
+                          setDropdownQuery('');
+                        }}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        {athlete.photo_url ? (
+                          <Image
+                            src={athlete.photo_url}
+                            alt={athlete.name}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+                            <span className="text-slate-600 text-sm font-semibold">
+                              {athlete.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-slate-900 truncate">{athlete.name}</div>
+                          <div className="text-xs text-slate-500 capitalize">
+                            {athlete.class_year} • {athlete.athlete_type}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>
