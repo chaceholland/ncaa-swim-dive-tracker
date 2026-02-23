@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { Team } from '@/lib/supabase/types';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
@@ -88,6 +89,40 @@ function ConferenceSectionSkeleton() {
   );
 }
 
+/**
+ * Featured Athlete Card with error handling
+ */
+function FeaturedAthleteCard({ athlete }: { athlete: FeaturedAthlete }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <Link
+      href={`/athlete/${athlete.id}`}
+      className="flex-shrink-0 group text-center w-[72px]"
+    >
+      <div className="w-[72px] h-[86px] rounded-xl overflow-hidden bg-gray-100 mb-1.5 shadow-sm group-hover:shadow-md transition-shadow border border-gray-200">
+        {!imageError ? (
+          <Image
+            src={athlete.photo_url}
+            alt={athlete.name}
+            width={72}
+            height={86}
+            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
+            {athlete.name.charAt(0)}
+          </div>
+        )}
+      </div>
+      <div className="text-xs font-medium text-gray-600 truncate w-[72px] group-hover:text-blue-600 transition-colors">
+        {athlete.name.split(' ')[0] || athlete.name || 'Athlete'}
+      </div>
+    </Link>
+  );
+}
+
 type DataQualityIssue = {
   athleteId: string;
   issues: string[];
@@ -98,7 +133,6 @@ type FeaturedAthlete = {
   id: string;
   name: string;
   photo_url: string;
-  team_id: string;
 };
 
 export default function Home() {
@@ -154,7 +188,7 @@ export default function Home() {
       try {
         const { data: featuredRaw } = await supabase
           .from('athletes')
-          .select('id, name, photo_url, team_id')
+          .select('id, name, photo_url')
           .not('photo_url', 'is', null)
           .not('photo_url', 'like', '/logos/%')
           .not('photo_url', 'like', '%dummy%')
@@ -348,24 +382,7 @@ export default function Home() {
           <h2 className="text-base font-semibold text-gray-700 mb-3">Featured Athletes</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {featuredAthletes.map(a => (
-              <a
-                key={a.id}
-                href={`/athlete/${a.id}`}
-                className="flex-shrink-0 group text-center w-[72px]"
-              >
-                <div className="w-[72px] h-[86px] rounded-xl overflow-hidden bg-gray-100 mb-1.5 shadow-sm group-hover:shadow-md transition-shadow border border-gray-200">
-                  <Image
-                    src={a.photo_url!}
-                    alt={a.name}
-                    width={72}
-                    height={86}
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="text-xs font-medium text-gray-600 truncate w-[72px] group-hover:text-blue-600 transition-colors">
-                  {a.name.split(' ')[0]}
-                </div>
-              </a>
+              <FeaturedAthleteCard key={a.id} athlete={a} />
             ))}
           </div>
         </div>
