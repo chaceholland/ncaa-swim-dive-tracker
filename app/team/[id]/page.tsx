@@ -190,17 +190,17 @@ export default function TeamRosterPage() {
 
           <div className="flex items-center gap-6 mt-12">
             {/* Team Logo */}
-            <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden flex-shrink-0">
+            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden flex-shrink-0">
               {team.logo_url ? (
                 <Image
                   src={team.logo_url}
                   alt={`${team.name} logo`}
-                  width={128}
-                  height={128}
+                  width={80}
+                  height={80}
                   className="w-full h-full object-contain p-2"
                 />
               ) : (
-                <span className="text-5xl font-bold" style={{ color: team.primary_color }}>
+                <span className="text-3xl font-bold" style={{ color: team.primary_color }}>
                   {getTeamInitials(team.name)}
                 </span>
               )}
@@ -208,9 +208,13 @@ export default function TeamRosterPage() {
 
             {/* Team Info */}
             <div className="text-white">
-              <h1 className="text-5xl font-bold mb-2">{team.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold">{team.name}</h1>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {team.athlete_count} athletes
+                </span>
+              </div>
               <p className="text-xl text-white/90">{team.conference_display_name}</p>
-              <p className="text-lg text-white/80 mt-2">{team.athlete_count} Athletes</p>
             </div>
           </div>
         </div>
@@ -292,7 +296,7 @@ export default function TeamRosterPage() {
                       src={athlete.photo_url}
                       alt={athlete.name}
                       fill
-                      className="object-cover"
+                      className={`object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       quality={95}
                       priority={index < 8}

@@ -181,10 +181,10 @@ export default function AthleteCard({
           <div className="relative">
             {showPhoto ? (
               // Athlete photo with loading state
-              <div className="relative w-44 h-44">
+              <div className="relative w-44 aspect-[3/4]">
                 <div
                   className={cn(
-                    'absolute inset-0 rounded-full bg-white ring-4 ring-white',
+                    'absolute inset-0 rounded-lg bg-white ring-4 ring-white',
                     'flex items-center justify-center',
                     imageLoading && 'animate-pulse'
                   )}
@@ -196,10 +196,9 @@ export default function AthleteCard({
                 <Image
                   src={athlete.photo_url!}
                   alt={`${athlete.name}`}
-                  width={176}
-                  height={176}
+                  fill
                   className={cn(
-                    'relative rounded-full ring-4 ring-white',
+                    'relative rounded-lg ring-4 ring-white',
                     'object-cover transition-opacity duration-300',
                     imageLoading ? 'opacity-0' : 'opacity-100'
                   )}
@@ -212,7 +211,7 @@ export default function AthleteCard({
               // Initials fallback
               <div
                 className={cn(
-                  'w-44 h-44 rounded-full flex items-center justify-center',
+                  'w-44 aspect-[3/4] rounded-lg flex items-center justify-center',
                   'ring-4 ring-white',
                   'font-bold text-5xl'
                 )}
