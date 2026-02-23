@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Athlete, Team } from '@/lib/supabase/types';
@@ -58,6 +59,7 @@ export default function AthleteCard({
   onFavoriteToggle,
   isFavorite,
 }: AthleteCardProps) {
+  const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -120,7 +122,8 @@ export default function AthleteCard({
         delay: staggerDelay,
         ease: [0.25, 0.1, 0.25, 1],
       }}
-      className="relative"
+      className="relative cursor-pointer"
+      onClick={() => router.push(`/athlete/${athlete.id}`)}
     >
       <div className="w-[280px] h-[380px] bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
         {/* Team color accent bar */}
@@ -278,7 +281,8 @@ export default function AthleteCard({
                 background: gradient,
                 color: 'white',
               }}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 if (athlete.profile_url) {
                   window.open(athlete.profile_url, '_blank', 'noopener,noreferrer');
                 }
