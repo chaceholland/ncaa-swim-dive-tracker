@@ -14,13 +14,6 @@ function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 }
 
-function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-    : '30, 64, 175';
-}
-
 export default function AthletePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -56,7 +49,7 @@ export default function AthletePage() {
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, router, supabase]);
 
   if (loading) {
     return (
@@ -184,7 +177,7 @@ export default function AthletePage() {
             More from {team.name}
           </h2>
           <div className="grid grid-cols-4 gap-4">
-            {teammates.slice(0, 8).map((tm, index) => (
+            {teammates.map((tm, index) => (
               <AthleteCard
                 key={tm.id}
                 athlete={tm}
