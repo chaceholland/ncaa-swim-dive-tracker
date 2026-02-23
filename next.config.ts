@@ -51,6 +51,62 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "dxbhsrqyrr690.cloudfront.net",
       },
+      {
+        protocol: "https",
+        hostname: "cornellbigred.com",
+      },
+      {
+        protocol: "https",
+        hostname: "gopsusports.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pennathletics.com",
+      },
+      {
+        protocol: "https",
+        hostname: "gocrimson.com",
+      },
+      {
+        protocol: "https",
+        hostname: "d3mojdi32uv7q.cloudfront.net",
+      },
+      {
+        protocol: "https",
+        hostname: "yalebulldogs.com",
+      },
+      {
+        protocol: "https",
+        hostname: "goheels.com",
+      },
+      {
+        protocol: "https",
+        hostname: "navysports.com",
+      },
+      {
+        protocol: "https",
+        hostname: "unlvrebels.com",
+      },
+      {
+        protocol: "https",
+        hostname: "towsontigers.com",
+      },
+      {
+        protocol: "https",
+        hostname: "fightingirish.com",
+      },
+      {
+        protocol: "https",
+        hostname: "virginiasports.com",
+      },
+      {
+        protocol: "https",
+        hostname: "hokiesports.com",
+      },
+      {
+        protocol: "https",
+        hostname: "ramblinwreck.com",
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
