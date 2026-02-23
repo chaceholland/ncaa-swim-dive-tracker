@@ -134,3 +134,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-slate-700);
 }
+
+/* Hide scrollbar for featured athletes strip */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
