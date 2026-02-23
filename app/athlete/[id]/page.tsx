@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import type { Athlete, Team } from '@/lib/supabase/types';
+import { useFavorites } from '@/lib/hooks/useFavorites';
 import Button from '@/components/ui/Button';
 import AthleteCard from '@/components/AthleteCard';
 
@@ -23,6 +24,9 @@ export default function AthletePage() {
   const [teammates, setTeammates] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [photoError, setPhotoError] = useState(false);
+
+  // Use favorites hook
+  const { toggleAthleteFavorite, isAthleteFavorite } = useFavorites();
 
   useEffect(() => {
     async function load() {
@@ -183,8 +187,16 @@ export default function AthletePage() {
                 athlete={tm}
                 team={team}
                 index={index}
-                isFavorite={false}
-                onFavoriteToggle={() => {}}
+                isFavorite={isAthleteFavorite(tm.id)}
+                onFavoriteToggle={() => toggleAthleteFavorite({
+                  id: tm.id,
+                  name: tm.name,
+                  team_id: tm.team_id,
+                  athlete_type: tm.athlete_type || undefined,
+                  class_year: tm.class_year || undefined,
+                  photo_url: tm.photo_url || undefined,
+                  hometown: tm.hometown || undefined
+                })}
               />
             ))}
           </div>

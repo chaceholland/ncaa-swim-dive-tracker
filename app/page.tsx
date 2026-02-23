@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Team } from '@/lib/supabase/types';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
+import { useFavorites } from '@/lib/hooks/useFavorites';
 import { formatLastUpdated } from '@/lib/utils';
 import Navigation from '@/components/Navigation';
 import FilterPills, {
@@ -101,8 +102,15 @@ export default function Home() {
   const [selectedConference, setSelectedConference] = useState<Conference>('all');
   const [selectedAthleteType, setSelectedAthleteType] = useState<AthleteType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [favoriteTeamIds, setFavoriteTeamIds] = useLocalStorage<string[]>('favorite-teams', []);
   const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<DataQualityIssue[]>('data-quality-issues', []);
+
+  // Use Supabase-backed favorites
+  const {
+    teamFavorites,
+    toggleTeamFavorite,
+    isTeamFavorite,
+    totalCount: favoritesCount
+  } = useFavorites();
   const [showIssuesModal, setShowIssuesModal] = useState(false);
 
   // Restore scroll position on mount
@@ -216,18 +224,21 @@ export default function Home() {
 
   // Handle favorite toggle
   const handleFavoriteToggle = (teamId: string) => {
-    setFavoriteTeamIds((prev) => {
-      if (prev.includes(teamId)) {
-        return prev.filter((id) => id !== teamId);
-      }
-      return [...prev, teamId];
-    });
+    const team = teams.find(t => t.id === teamId);
+    if (team) {
+      toggleTeamFavorite({
+        id: team.id,
+        name: team.name,
+        conference: team.conference,
+        logo_url: team.logo_url || undefined
+      });
+    }
   };
 
   // Handle favorites view
   const handleFavoritesClick = () => {
     // TODO: Implement favorites modal/view
-    console.log('Favorites clicked:', favoriteTeamIds);
+    console.log('Favorites clicked:', teamFavorites);
   };
 
   // Handle missing data view
@@ -282,16 +293,16 @@ export default function Home() {
     }
   };
 
-  // Convert favoriteTeamIds array to Set for faster lookups
+  // Convert team favorites to Set for faster lookups
   const favoriteTeamIdsSet = useMemo(() => {
-    return new Set(favoriteTeamIds);
-  }, [favoriteTeamIds]);
+    return new Set(teamFavorites.map(f => f.id));
+  }, [teamFavorites]);
 
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Navigation */}
       <Navigation
-        favoritesCount={favoriteTeamIds.length}
+        favoritesCount={favoritesCount}
         onFavoritesClick={handleFavoritesClick}
         onMissingDataClick={handleMissingDataClick}
         issuesCount={dataQualityIssues.length}
