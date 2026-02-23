@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { Team } from '@/lib/supabase/types';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
@@ -89,56 +87,15 @@ function ConferenceSectionSkeleton() {
   );
 }
 
-/**
- * Featured Athlete Card with error handling
- */
-function FeaturedAthleteCard({ athlete }: { athlete: FeaturedAthlete }) {
-  const [imageError, setImageError] = useState(false);
-
-  return (
-    <Link
-      href={`/athlete/${athlete.id}`}
-      className="flex-shrink-0 group text-center w-[72px]"
-    >
-      <div className="w-[72px] h-[86px] rounded-xl overflow-hidden bg-gray-100 mb-1.5 shadow-sm group-hover:shadow-md transition-shadow border border-gray-200">
-        {!imageError ? (
-          <Image
-            src={athlete.photo_url}
-            alt={athlete.name}
-            width={72}
-            height={86}
-            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-            {athlete.name.charAt(0)}
-          </div>
-        )}
-      </div>
-      <div className="text-xs font-medium text-gray-600 truncate w-[72px] group-hover:text-blue-600 transition-colors">
-        {athlete.name.split(' ')[0] || athlete.name || 'Athlete'}
-      </div>
-    </Link>
-  );
-}
-
 type DataQualityIssue = {
   athleteId: string;
   issues: string[];
   customNote?: string;
 };
 
-type FeaturedAthlete = {
-  id: string;
-  name: string;
-  photo_url: string;
-};
-
 export default function Home() {
   // State
   const [teams, setTeams] = useState<Team[]>([]);
-  const [featuredAthletes, setFeaturedAthletes] = useState<FeaturedAthlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('rosters');
   const [selectedConference, setSelectedConference] = useState<Conference>('all');
@@ -184,29 +141,7 @@ export default function Home() {
       }
     }
 
-    async function fetchFeaturedAthletes() {
-      try {
-        const { data: featuredRaw } = await supabase
-          .from('athletes')
-          .select('id, name, photo_url')
-          .not('photo_url', 'is', null)
-          .not('photo_url', 'like', '/logos/%')
-          .not('photo_url', 'like', '%dummy%')
-          .limit(40);
-
-        // Shuffle client-side and take 16
-        const shuffled = (featuredRaw || [])
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 16);
-
-        setFeaturedAthletes(shuffled as FeaturedAthlete[]);
-      } catch (error) {
-        console.error('Error fetching featured athletes:', error);
-      }
-    }
-
     fetchTeams();
-    fetchFeaturedAthletes();
   }, []);
 
   // Filter teams based on search and filters
@@ -375,18 +310,6 @@ export default function Home() {
 
       {/* Hero Section */}
       <HeroSection />
-
-      {/* Featured Athletes Strip */}
-      {featuredAthletes.length > 0 && (
-        <div className="px-6 py-4">
-          <h2 className="text-base font-semibold text-gray-700 mb-3">Featured Athletes</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {featuredAthletes.map(a => (
-              <FeaturedAthleteCard key={a.id} athlete={a} />
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Conference Sections */}
       {loading ? (
