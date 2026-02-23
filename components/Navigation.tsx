@@ -10,7 +10,6 @@ import { supabase } from '@/lib/supabase/client';
 import type { Athlete, Team } from '@/lib/supabase/types';
 
 export interface NavigationProps {
-  onSearch: (query: string) => void;
   favoritesCount: number;
   onFavoritesClick: () => void;
   onMissingDataClick: () => void;
@@ -22,7 +21,6 @@ export interface NavigationProps {
  * Features scroll detection, search bar, favorites, and missing data buttons
  */
 export default function Navigation({
-  onSearch,
   favoritesCount,
   onFavoritesClick,
   onMissingDataClick,
@@ -31,8 +29,8 @@ export default function Navigation({
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [dropdownQuery, setDropdownQuery] = useState('');
-  const [athleteResults, setAthleteResults] = useState<Athlete[]>([]);
-  const [teamResults, setTeamResults] = useState<(Pick<Team, 'id' | 'name' | 'logo_url' | 'conference_display_name'>)[]>([]);
+  const [athleteResults, setAthleteResults] = useState<Pick<Athlete, 'id' | 'name' | 'photo_url' | 'class_year' | 'athlete_type' | 'team_id'>[]>([]);
+  const [teamResults, setTeamResults] = useState<Pick<Team, 'id' | 'name' | 'logo_url' | 'conference_display_name'>[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -259,7 +257,7 @@ export default function Navigation({
                       setShowDropdown(false);
                     }}
                   >
-                    View all results for "{dropdownQuery}" →
+                    View all results for &quot;{dropdownQuery}&quot; →
                   </button>
                 </div>
               )}
@@ -499,7 +497,7 @@ export default function Navigation({
                     setShowDropdown(false);
                   }}
                 >
-                  View all results for "{dropdownQuery}" →
+                  View all results for &quot;{dropdownQuery}&quot; →
                 </button>
               </div>
             )}

@@ -291,7 +291,6 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50">
       {/* Navigation */}
       <Navigation
-        onSearch={setSearchQuery}
         favoritesCount={favoriteTeamIds.length}
         onFavoritesClick={handleFavoritesClick}
         onMissingDataClick={handleMissingDataClick}
