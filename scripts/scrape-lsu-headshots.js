@@ -127,8 +127,8 @@ async function main() {
   let found = 0;
   let notFound = 0;
 
-  // Test with just first 3 athletes
-  for (const athlete of athletes.slice(0, 3)) {
+  // Scrape all athletes
+  for (const athlete of athletes) {
     console.log(`${athlete.name}:`);
 
     const photoUrl = await scrapeHeadshot(page, athlete.name);
