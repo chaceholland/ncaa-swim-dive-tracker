@@ -292,16 +292,26 @@ export default function TeamRosterPage() {
                 {/* Athlete Photo */}
                 <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
                   {athlete.photo_url ? (
-                    <Image
-                      src={athlete.photo_url}
-                      alt={athlete.name}
-                      fill
-                      className={`object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      quality={95}
-                      priority={index < 8}
-                      unoptimized={athlete.photo_url.includes('auburntigers.com')}
-                    />
+                    athlete.photo_url.includes('/render/image/') ? (
+                      // Regular img for Supabase - bypass Next.js Image optimization
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={athlete.photo_url}
+                        alt={athlete.name}
+                        className={`w-full h-full object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
+                      />
+                    ) : (
+                      <Image
+                        src={athlete.photo_url}
+                        alt={athlete.name}
+                        fill
+                        className={`object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        quality={95}
+                        priority={index < 8}
+                        unoptimized={athlete.photo_url.includes('auburntigers.com')}
+                      />
+                    )
                   ) : team.logo_url ? (
                     <div
                       className="w-full h-full flex items-center justify-center p-8"
