@@ -98,6 +98,9 @@ export default function AthleteCard({
   // Determine whether to show photo or initials
   const showPhoto = athlete.photo_url && !imageError;
 
+  // Check if image is from Supabase render endpoint (already optimized)
+  const isSupabaseRendered = athlete.photo_url?.includes('/render/image/');
+
   // Format class year for display
   const formatClassYear = (year: string): string => {
     return year.charAt(0).toUpperCase() + year.slice(1);
@@ -193,19 +196,35 @@ export default function AthleteCard({
                     <div className="text-gray-400 text-xs">Loading...</div>
                   )}
                 </div>
-                <Image
-                  src={athlete.photo_url!}
-                  alt={`${athlete.name}`}
-                  fill
-                  className={cn(
-                    'relative rounded-lg ring-4 ring-white',
-                    'object-cover transition-opacity duration-300',
-                    imageLoading ? 'opacity-0' : 'opacity-100'
-                  )}
-                  onError={handleImageError}
-                  onLoad={handleImageLoad}
-                  priority={index < 6} // Priority load first 6 images
-                />
+                {isSupabaseRendered ? (
+                  // Regular img for Supabase - completely bypass Next.js Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={athlete.photo_url!}
+                    alt={`${athlete.name}`}
+                    className={cn(
+                      'absolute inset-0 w-full h-full rounded-lg ring-4 ring-white',
+                      'object-cover transition-opacity duration-300',
+                      imageLoading ? 'opacity-0' : 'opacity-100'
+                    )}
+                    onError={handleImageError}
+                    onLoad={handleImageLoad}
+                  />
+                ) : (
+                  <Image
+                    src={athlete.photo_url!}
+                    alt={`${athlete.name}`}
+                    fill
+                    className={cn(
+                      'relative rounded-lg ring-4 ring-white',
+                      'object-cover transition-opacity duration-300',
+                      imageLoading ? 'opacity-0' : 'opacity-100'
+                    )}
+                    onError={handleImageError}
+                    onLoad={handleImageLoad}
+                    priority={index < 6} // Priority load first 6 images
+                  />
+                )}
               </div>
             ) : (
               // Initials fallback
