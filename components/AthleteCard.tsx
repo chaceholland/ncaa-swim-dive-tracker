@@ -98,9 +98,10 @@ export default function AthleteCard({
   // Determine whether to show photo or initials
   const showPhoto = athlete.photo_url && !imageError;
 
-  // Check if image is already optimized by external CDN (Supabase or SideArm)
+  // Check if image is already optimized by external CDN (Supabase, SideArm, CloudFront)
   const isExternallyOptimized = athlete.photo_url?.includes('/render/image/') ||
-                                 athlete.photo_url?.includes('sidearmdev.com');
+                                 athlete.photo_url?.includes('sidearmdev.com') ||
+                                 athlete.photo_url?.includes('cloudfront.net');
 
   // Format class year for display
   const formatClassYear = (year: string): string => {
