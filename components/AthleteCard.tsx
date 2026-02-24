@@ -98,8 +98,9 @@ export default function AthleteCard({
   // Determine whether to show photo or initials
   const showPhoto = athlete.photo_url && !imageError;
 
-  // Check if image is from Supabase render endpoint (already optimized)
-  const isSupabaseRendered = athlete.photo_url?.includes('/render/image/');
+  // Check if image is already optimized by external CDN (Supabase or SideArm)
+  const isExternallyOptimized = athlete.photo_url?.includes('/render/image/') ||
+                                 athlete.photo_url?.includes('sidearmdev.com');
 
   // Format class year for display
   const formatClassYear = (year: string): string => {
@@ -196,8 +197,8 @@ export default function AthleteCard({
                     <div className="text-gray-400 text-xs">Loading...</div>
                   )}
                 </div>
-                {isSupabaseRendered ? (
-                  // Regular img for Supabase - completely bypass Next.js Image
+                {isExternallyOptimized ? (
+                  // Regular img for externally optimized images (Supabase, SideArm CDN)
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={athlete.photo_url!}

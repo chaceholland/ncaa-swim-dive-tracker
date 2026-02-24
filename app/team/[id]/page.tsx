@@ -292,8 +292,8 @@ export default function TeamRosterPage() {
                 {/* Athlete Photo */}
                 <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
                   {athlete.photo_url ? (
-                    athlete.photo_url.includes('/render/image/') ? (
-                      // Regular img for Supabase - bypass Next.js Image optimization
+                    (athlete.photo_url.includes('/render/image/') || athlete.photo_url.includes('sidearmdev.com')) ? (
+                      // Regular img for externally optimized images (Supabase, SideArm CDN)
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={athlete.photo_url}
