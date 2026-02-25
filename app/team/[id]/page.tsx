@@ -292,7 +292,7 @@ export default function TeamRosterPage() {
                 {/* Athlete Photo */}
                 <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
                   {athlete.photo_url ? (
-                    (athlete.photo_url.includes('/render/image/') || athlete.photo_url.includes('sidearmdev.com') || athlete.photo_url.includes('cloudfront.net')) ? (
+                    (athlete.photo_url.includes('/render/image/') || athlete.photo_url.includes('supabase.co/storage/') || athlete.photo_url.includes('sidearmdev.com') || athlete.photo_url.includes('cloudfront.net')) ? (
                       // Regular img for externally optimized images (Supabase, SideArm CDN, CloudFront)
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
