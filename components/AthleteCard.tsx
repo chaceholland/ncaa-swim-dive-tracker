@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Athlete, Team } from '@/lib/supabase/types';
 import { useIntersectionObserver } from '@/lib/hooks/useIntersectionObserver';
 import { getTeamGradient, getContrastColor, cn } from '@/lib/utils';
-import Badge from '@/components/ui/Badge';
+import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button';
 
 interface AthleteCardProps {
@@ -100,6 +100,7 @@ export default function AthleteCard({
 
   // Check if image is already optimized by external CDN (Supabase, SideArm, CloudFront)
   const isExternallyOptimized = athlete.photo_url?.includes('/render/image/') ||
+                                     athlete.photo_url?.includes('supabase.co/storage/') ||
                                  athlete.photo_url?.includes('sidearmdev.com') ||
                                  athlete.photo_url?.includes('cloudfront.net');
 
