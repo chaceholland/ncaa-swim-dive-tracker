@@ -9,6 +9,7 @@ import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { isExternalUrl } from '@/lib/image-utils';
 
 type DataQualityIssue = {
   athleteId: string;
@@ -192,13 +193,23 @@ export default function TeamRosterPage() {
             {/* Team Logo */}
             <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden flex-shrink-0">
               {team.logo_url ? (
-                <Image
-                  src={team.logo_url}
-                  alt={`${team.name} logo`}
-                  width={80}
-                  height={80}
-                  className="w-full h-full object-contain p-2"
-                />
+                isExternalUrl(team.logo_url) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={team.logo_url}
+                    alt={`${team.name} logo`}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <Image
+                    src={team.logo_url}
+                    alt={`${team.name} logo`}
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-contain p-2"
+                  />
+                )
               ) : (
                 <span className="text-3xl font-bold" style={{ color: team.primary_color }}>
                   {getTeamInitials(team.name)}
@@ -292,21 +303,13 @@ export default function TeamRosterPage() {
                 {/* Athlete Photo */}
                 <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
                   {athlete.photo_url ? (
-                    // Check if externally optimized to bypass Vercel Image Optimization
-                    (athlete.photo_url.includes('/render/image/') ||
-                     athlete.photo_url.includes('supabase.co/storage') ||
-                     athlete.photo_url.includes('sidearmdev.com') ||
-                     athlete.photo_url.includes('cloudfront.net') ||
-                     athlete.photo_url.includes('/imgproxy/') ||
-                     athlete.photo_url.includes('storage.googleapis.com') ||
-                     (athlete.photo_url.startsWith('http') &&
-                      (athlete.photo_url.includes('?width=') || athlete.photo_url.includes('&width=') ||
-                       athlete.photo_url.includes('?height=') || athlete.photo_url.includes('&height=')))) ? (
-                      // Regular img for externally optimized images
+                    isExternalUrl(athlete.photo_url) ? (
+                      // Raw img for all external URLs to avoid hotlink/CDN issues
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={athlete.photo_url}
                         alt={athlete.name}
+                        loading={index < 8 ? undefined : 'lazy'}
                         referrerPolicy="no-referrer"
                         className={`w-full h-full object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
                       />

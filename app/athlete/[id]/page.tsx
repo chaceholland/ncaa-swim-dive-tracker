@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import type { Athlete, Team } from '@/lib/supabase/types';
+import { isExternalUrl } from '@/lib/image-utils';
 import { useFavorites } from '@/lib/hooks/useFavorites';
 import Button from '@/components/ui/Button';
 import AthleteCard from '@/components/AthleteCard';
@@ -103,14 +104,25 @@ export default function AthletePage() {
           >
             <div className="w-48 h-56 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 bg-white/10">
               {athlete.photo_url && !photoError ? (
-                <Image
-                  src={athlete.photo_url}
-                  alt={athlete.name}
-                  width={192}
-                  height={224}
-                  className="w-full h-full object-cover object-top"
-                  onError={() => setPhotoError(true)}
-                />
+                isExternalUrl(athlete.photo_url) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={athlete.photo_url}
+                    alt={athlete.name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover object-top"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  <Image
+                    src={athlete.photo_url}
+                    alt={athlete.name}
+                    width={192}
+                    height={224}
+                    className="w-full h-full object-cover object-top"
+                    onError={() => setPhotoError(true)}
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/60 text-4xl font-bold">
                   {getInitials(athlete.name)}
@@ -128,8 +140,14 @@ export default function AthletePage() {
           >
             <div className="flex items-center gap-3 mb-2">
               {team.logo_url && (
-                <Image src={team.logo_url} alt={team.name} width={28} height={28}
-                  className="w-7 h-7 object-contain" />
+                isExternalUrl(team.logo_url) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={team.logo_url} alt={team.name} referrerPolicy="no-referrer"
+                    className="w-7 h-7 object-contain" />
+                ) : (
+                  <Image src={team.logo_url} alt={team.name} width={28} height={28}
+                    className="w-7 h-7 object-contain" />
+                )
               )}
               <Link href={`/team/${team.id}`}
                 className="text-white/80 hover:text-white text-sm font-medium transition-colors">

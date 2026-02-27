@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { isExternalUrl } from '@/lib/image-utils';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { supabase } from '@/lib/supabase/client';
@@ -483,21 +484,13 @@ export default function Navigation({
                         className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
                       >
                         {athlete.photo_url ? (
-                          // Check if externally optimized to bypass Vercel Image Optimization
-                          (athlete.photo_url.includes('/render/image/') ||
-                           athlete.photo_url.includes('supabase.co/storage') ||
-                           athlete.photo_url.includes('sidearmdev.com') ||
-                           athlete.photo_url.includes('cloudfront.net') ||
-                           athlete.photo_url.includes('/imgproxy/') ||
-                           athlete.photo_url.includes('storage.googleapis.com') ||
-                           (athlete.photo_url.startsWith('http') &&
-                            (athlete.photo_url.includes('?width=') || athlete.photo_url.includes('&width=') ||
-                             athlete.photo_url.includes('?height=') || athlete.photo_url.includes('&height=')))) ? (
+                          isExternalUrl(athlete.photo_url) ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={athlete.photo_url}
                               alt={athlete.name}
                               referrerPolicy="no-referrer"
+                              loading="lazy"
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (

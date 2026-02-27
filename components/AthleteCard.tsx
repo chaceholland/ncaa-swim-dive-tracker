@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Athlete, Team } from '@/lib/supabase/types';
 import { useIntersectionObserver } from '@/lib/hooks/useIntersectionObserver';
 import { getTeamGradient, getContrastColor, cn } from '@/lib/utils';
+import { isExternalUrl } from '@/lib/image-utils';
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button';
 
@@ -98,29 +99,8 @@ export default function AthleteCard({
   // Determine whether to show photo or initials
   const showPhoto = athlete.photo_url && !imageError;
 
-  // Check if image is already optimized by external CDN or service
-  // These should bypass Vercel Image Optimization to avoid hotlink protection issues
-  const isExternallyOptimized = athlete.photo_url?.includes('/render/image/') ||      // Supabase Storage (optimized)
-                                 athlete.photo_url?.includes('supabase.co/storage') || // Supabase Storage (direct)
-                                 athlete.photo_url?.includes('sidearmdev.com') ||      // SideArm CDN
-                                 athlete.photo_url?.includes('cloudfront.net') ||      // CloudFront CDN
-                                 athlete.photo_url?.includes('/imgproxy/') ||          // School-hosted imgproxy
-                                 athlete.photo_url?.includes('storage.googleapis.com') || // Google Cloud Storage
-                                 (athlete.photo_url?.startsWith('http') &&            // External URLs with size params
-                                  (athlete.photo_url.includes('?width=') ||
-                                   athlete.photo_url.includes('&width=') ||
-                                   athlete.photo_url.includes('?height=') ||
-                                   athlete.photo_url.includes('&height=')));
-
-  // Debug logging (remove after testing)
-  if (typeof window !== 'undefined' && index === 0) {
-    console.log('[AthleteCard Debug]', {
-      name: athlete.name,
-      url: athlete.photo_url?.substring(0, 80),
-      isExternallyOptimized,
-      willUseImgTag: isExternallyOptimized
-    });
-  }
+  // All external URLs bypass Next.js Image Optimization to avoid hotlink issues
+  const useRawImg = isExternalUrl(athlete.photo_url);
 
   // Format class year for display
   const formatClassYear = (year: string): string => {
@@ -217,8 +197,8 @@ export default function AthleteCard({
                     <div className="text-gray-400 text-xs">Loading...</div>
                   )}
                 </div>
-                {isExternallyOptimized ? (
-                  // Regular img for externally optimized images (Supabase, SideArm CDN)
+                {useRawImg ? (
+                  // Raw img for all external URLs to avoid hotlink/CDN issues
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={athlete.photo_url!}

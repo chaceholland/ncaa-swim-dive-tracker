@@ -12,6 +12,7 @@ import {
   getContrastColor,
   cn,
 } from '@/lib/utils';
+import { isExternalUrl } from '@/lib/image-utils';
 
 interface TeamCardProps {
   team: Team;
@@ -165,20 +166,36 @@ export default function TeamCard({
                     )}
                   </div>
                   {logoUrl && (
-                    <Image
-                      src={logoUrl}
-                      alt={`${team.name} logo`}
-                      width={80}
-                      height={80}
-                      className={cn(
-                        'relative rounded-full p-2 bg-white ring-4 ring-white/50',
-                        'object-contain transition-opacity duration-300',
-                        imageLoading ? 'opacity-0' : 'opacity-100'
-                      )}
-                      onError={handleImageError}
-                      onLoad={handleImageLoad}
-                      priority={index < 6} // Priority load first 6 images
-                    />
+                    isExternalUrl(logoUrl) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logoUrl}
+                        alt={`${team.name} logo`}
+                        referrerPolicy="no-referrer"
+                        className={cn(
+                          'relative rounded-full p-2 bg-white ring-4 ring-white/50 w-20 h-20',
+                          'object-contain transition-opacity duration-300',
+                          imageLoading ? 'opacity-0' : 'opacity-100'
+                        )}
+                        onError={handleImageError}
+                        onLoad={handleImageLoad}
+                      />
+                    ) : (
+                      <Image
+                        src={logoUrl}
+                        alt={`${team.name} logo`}
+                        width={80}
+                        height={80}
+                        className={cn(
+                          'relative rounded-full p-2 bg-white ring-4 ring-white/50',
+                          'object-contain transition-opacity duration-300',
+                          imageLoading ? 'opacity-0' : 'opacity-100'
+                        )}
+                        onError={handleImageError}
+                        onLoad={handleImageLoad}
+                        priority={index < 6}
+                      />
+                    )
                   )}
                 </div>
               )}
