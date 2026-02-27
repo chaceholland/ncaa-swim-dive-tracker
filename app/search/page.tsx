@@ -110,8 +110,23 @@ function SearchResults() {
                     >
                       <div className="w-12 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                         {a.photo_url && !a.photo_url.startsWith('/logos/') ? (
-                          <Image src={a.photo_url} alt={a.name} width={48} height={56}
-                            className="w-full h-full object-cover object-top" />
+                          // Check if externally optimized to bypass Vercel Image Optimization
+                          (a.photo_url.includes('/render/image/') ||
+                           a.photo_url.includes('supabase.co/storage') ||
+                           a.photo_url.includes('sidearmdev.com') ||
+                           a.photo_url.includes('cloudfront.net') ||
+                           a.photo_url.includes('/imgproxy/') ||
+                           a.photo_url.includes('storage.googleapis.com') ||
+                           (a.photo_url.startsWith('http') &&
+                            (a.photo_url.includes('?width=') || a.photo_url.includes('&width=') ||
+                             a.photo_url.includes('?height=') || a.photo_url.includes('&height=')))) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={a.photo_url} alt={a.name} referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover object-top" />
+                          ) : (
+                            <Image src={a.photo_url} alt={a.name} width={48} height={56}
+                              className="w-full h-full object-cover object-top" />
+                          )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">
                             {a.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
