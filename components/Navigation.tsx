@@ -224,13 +224,32 @@ export default function Navigation({
                           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
                         >
                           {athlete.photo_url ? (
-                            <Image
-                              src={athlete.photo_url}
-                              alt={athlete.name}
-                              width={40}
-                              height={40}
-                              className="rounded-full object-cover"
-                            />
+                            // Check if externally optimized to bypass Vercel Image Optimization
+                            (athlete.photo_url.includes('/render/image/') ||
+                             athlete.photo_url.includes('supabase.co/storage') ||
+                             athlete.photo_url.includes('sidearmdev.com') ||
+                             athlete.photo_url.includes('cloudfront.net') ||
+                             athlete.photo_url.includes('/imgproxy/') ||
+                             athlete.photo_url.includes('storage.googleapis.com') ||
+                             (athlete.photo_url.startsWith('http') &&
+                              (athlete.photo_url.includes('?width=') || athlete.photo_url.includes('&width=') ||
+                               athlete.photo_url.includes('?height=') || athlete.photo_url.includes('&height=')))) ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={athlete.photo_url}
+                                alt={athlete.name}
+                                referrerPolicy="no-referrer"
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <Image
+                                src={athlete.photo_url}
+                                alt={athlete.name}
+                                width={40}
+                                height={40}
+                                className="rounded-full object-cover"
+                              />
+                            )
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
                               <span className="text-slate-600 text-sm font-semibold">
@@ -464,13 +483,32 @@ export default function Navigation({
                         className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
                       >
                         {athlete.photo_url ? (
-                          <Image
-                            src={athlete.photo_url}
-                            alt={athlete.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
-                          />
+                          // Check if externally optimized to bypass Vercel Image Optimization
+                          (athlete.photo_url.includes('/render/image/') ||
+                           athlete.photo_url.includes('supabase.co/storage') ||
+                           athlete.photo_url.includes('sidearmdev.com') ||
+                           athlete.photo_url.includes('cloudfront.net') ||
+                           athlete.photo_url.includes('/imgproxy/') ||
+                           athlete.photo_url.includes('storage.googleapis.com') ||
+                           (athlete.photo_url.startsWith('http') &&
+                            (athlete.photo_url.includes('?width=') || athlete.photo_url.includes('&width=') ||
+                             athlete.photo_url.includes('?height=') || athlete.photo_url.includes('&height=')))) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={athlete.photo_url}
+                              alt={athlete.name}
+                              referrerPolicy="no-referrer"
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Image
+                              src={athlete.photo_url}
+                              alt={athlete.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover"
+                            />
+                          )
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
                             <span className="text-slate-600 text-sm font-semibold">
