@@ -292,12 +292,22 @@ export default function TeamRosterPage() {
                 {/* Athlete Photo */}
                 <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
                   {athlete.photo_url ? (
-                    (athlete.photo_url.includes('/render/image/') || athlete.photo_url.includes('supabase.co/storage/') || athlete.photo_url.includes('sidearmdev.com') || athlete.photo_url.includes('cloudfront.net')) ? (
-                      // Regular img for externally optimized images (Supabase, SideArm CDN, CloudFront)
+                    // Check if externally optimized to bypass Vercel Image Optimization
+                    (athlete.photo_url.includes('/render/image/') ||
+                     athlete.photo_url.includes('supabase.co/storage') ||
+                     athlete.photo_url.includes('sidearmdev.com') ||
+                     athlete.photo_url.includes('cloudfront.net') ||
+                     athlete.photo_url.includes('/imgproxy/') ||
+                     athlete.photo_url.includes('storage.googleapis.com') ||
+                     (athlete.photo_url.startsWith('http') &&
+                      (athlete.photo_url.includes('?width=') || athlete.photo_url.includes('&width=') ||
+                       athlete.photo_url.includes('?height=') || athlete.photo_url.includes('&height=')))) ? (
+                      // Regular img for externally optimized images
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={athlete.photo_url}
                         alt={athlete.name}
+                        referrerPolicy="no-referrer"
                         className={`w-full h-full object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
                       />
                     ) : (
@@ -309,7 +319,6 @@ export default function TeamRosterPage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         quality={95}
                         priority={index < 8}
-                        unoptimized={athlete.photo_url.includes('auburntigers.com')}
                       />
                     )
                   ) : team.logo_url ? (
