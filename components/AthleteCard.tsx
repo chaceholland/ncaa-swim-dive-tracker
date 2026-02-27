@@ -213,6 +213,7 @@ export default function AthleteCard({
                   <img
                     src={athlete.photo_url!}
                     alt={`${athlete.name}`}
+                    referrerPolicy="no-referrer"
                     className={cn(
                       'absolute inset-0 w-full h-full rounded-lg ring-4 ring-white',
                       'object-cover transition-opacity duration-300',
