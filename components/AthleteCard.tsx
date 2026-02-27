@@ -112,6 +112,16 @@ export default function AthleteCard({
                                    athlete.photo_url.includes('?height=') ||
                                    athlete.photo_url.includes('&height=')));
 
+  // Debug logging (remove after testing)
+  if (typeof window !== 'undefined' && index === 0) {
+    console.log('[AthleteCard Debug]', {
+      name: athlete.name,
+      url: athlete.photo_url?.substring(0, 80),
+      isExternallyOptimized,
+      willUseImgTag: isExternallyOptimized
+    });
+  }
+
   // Format class year for display
   const formatClassYear = (year: string): string => {
     return year.charAt(0).toUpperCase() + year.slice(1);
