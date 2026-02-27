@@ -98,11 +98,19 @@ export default function AthleteCard({
   // Determine whether to show photo or initials
   const showPhoto = athlete.photo_url && !imageError;
 
-  // Check if image is already optimized by external CDN (Supabase, SideArm, CloudFront)
-  const isExternallyOptimized = athlete.photo_url?.includes('/render/image/') ||
-                                     athlete.photo_url?.includes('supabase.co/storage/') ||
-                                 athlete.photo_url?.includes('sidearmdev.com') ||
-                                 athlete.photo_url?.includes('cloudfront.net');
+  // Check if image is already optimized by external CDN or service
+  // These should bypass Vercel Image Optimization to avoid hotlink protection issues
+  const isExternallyOptimized = athlete.photo_url?.includes('/render/image/') ||      // Supabase Storage (optimized)
+                                 athlete.photo_url?.includes('supabase.co/storage') || // Supabase Storage (direct)
+                                 athlete.photo_url?.includes('sidearmdev.com') ||      // SideArm CDN
+                                 athlete.photo_url?.includes('cloudfront.net') ||      // CloudFront CDN
+                                 athlete.photo_url?.includes('/imgproxy/') ||          // School-hosted imgproxy
+                                 athlete.photo_url?.includes('storage.googleapis.com') || // Google Cloud Storage
+                                 (athlete.photo_url?.startsWith('http') &&            // External URLs with size params
+                                  (athlete.photo_url.includes('?width=') ||
+                                   athlete.photo_url.includes('&width=') ||
+                                   athlete.photo_url.includes('?height=') ||
+                                   athlete.photo_url.includes('&height=')));
 
   // Format class year for display
   const formatClassYear = (year: string): string => {
