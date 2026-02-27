@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Loading Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .test { margin: 20px 0; border: 1px solid #ccc; padding: 10px; }
+        img { max-width: 200px; display: block; margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Athletic Site Image Loading Test</h1>
+    <p>Testing different configurations to see which works...</p>
+
+    <div class="test">
+        <h3>Cal - WITH referrerPolicy="no-referrer"</h3>
+        <img
+            src="https://calbears.com/images/2025/9/24/Colby_Hatton_20250911_KCox_165831.jpg?width=1920&height=1920"
+            referrerPolicy="no-referrer"
+            onerror="this.parentElement.querySelector('.status').innerHTML='❌ Failed to load'; this.parentElement.querySelector('.status').className='status error';"
+            onload="this.parentElement.querySelector('.status').innerHTML='✅ Loaded successfully'; this.parentElement.querySelector('.status').className='status success';"
+        />
+        <div class="status">Loading...</div>
+    </div>
+
+    <div class="test">
+        <h3>Cal - WITHOUT referrerPolicy (will send Referer)</h3>
+        <img
+            src="https://calbears.com/images/2025/9/24/Colby_Hatton_20250911_KCox_165831.jpg?width=1920&height=1920"
+            onerror="this.parentElement.querySelector('.status').innerHTML='❌ Failed to load (expected)'; this.parentElement.querySelector('.status').className='status error';"
+            onload="this.parentElement.querySelector('.status').innerHTML='✅ Loaded'; this.parentElement.querySelector('.status').className='status success';"
+        />
+        <div class="status">Loading...</div>
+    </div>
+
+    <div class="test">
+        <h3>Stanford - WITH referrerPolicy="no-referrer"</h3>
+        <img
+            src="https://storage.googleapis.com/stanford-prod/2025/10/11/nioEGuidJFW4DDUvjZZsruQemWXxvaoXIbSJdtTq.jpg"
+            referrerPolicy="no-referrer"
+            onerror="this.parentElement.querySelector('.status').innerHTML='❌ Failed to load'; this.parentElement.querySelector('.status').className='status error';"
+            onload="this.parentElement.querySelector('.status').innerHTML='✅ Loaded successfully'; this.parentElement.querySelector('.status').className='status success';"
+        />
+        <div class="status">Loading...</div>
+    </div>
+
+    <div class="test">
+        <h3>Virginia - WITH referrerPolicy="no-referrer"</h3>
+        <img
+            src="https://virginiasports.com/imgproxy/5DhgCEZUkMe6niTNt3D9Qa1MY7F86yJ9jNyxt-A57OM/rs:fit:1980:0:0:0/g:ce:0:0/q:90/aHR0cHM6Ly9zdG9yYWdlLmdvb2dsZWFwaXMuY29tL3Zpcmdpbmlhc3BvcnRzLWNvbS1wcm9kLzIwMjUvMTAvMDYvV1RsOEVkdzNLV3g5RnpIczVNOHhiOG5BZzhoNnE1ODVMZ3Y0bGI0Wi5wbmc.png"
+            referrerPolicy="no-referrer"
+            onerror="this.parentElement.querySelector('.status').innerHTML='❌ Failed to load'; this.parentElement.querySelector('.status').className='status error';"
+            onload="this.parentElement.querySelector('.status').innerHTML='✅ Loaded successfully'; this.parentElement.querySelector('.status').className='status success';"
+        />
+        <div class="status">Loading...</div>
+    </div>
+
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Open your browser console (F12)</li>
+        <li>Check which images load</li>
+        <li>Look for specific error messages in console</li>
+        <li>Check Network tab to see HTTP status codes</li>
+    </ol>
+</body>
+</html>
