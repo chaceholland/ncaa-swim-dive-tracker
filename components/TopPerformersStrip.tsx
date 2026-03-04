@@ -34,7 +34,7 @@ interface Performer {
   timeMs: number;
   timeFormatted: string;
   photoUrl: string | null;
-  profileSlug: string | null; // from web app athletes table
+  profileId: string | null; // UUID from web app athletes table
 }
 
 export default function TopPerformersStrip() {
@@ -107,26 +107,15 @@ export default function TopPerformersStrip() {
           }
         }
 
-        // 4. Look up team names from the teams table
-        const teamSlugs = Array.from(
-          new Set(
-            (swimAthletes ?? [])
-              .map((a) => a.team_id)
-              .filter((id): id is string => Boolean(id)),
-          ),
-        );
-
-        const { data: teamsData } = await supabase
-          .from("teams")
-          .select("id, name, slug")
-          .in("slug", teamSlugs);
-
-        const teamNameMap = new Map<string, string>();
-        for (const t of teamsData ?? []) {
-          teamNameMap.set(t.slug, t.name);
+        // 4. Convert team_id slug to display name (e.g. "ohio-state" → "Ohio State")
+        function slugToDisplayName(slug: string): string {
+          return slug
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
         }
 
-        // 5. Try to match to web app athletes table for photos and profile slugs
+        // 5. Try to match to web app athletes table for photos and profile IDs
         // Match by name — best-effort
         const athleteNames = (swimAthletes ?? [])
           .map((a) => a.name)
@@ -156,7 +145,7 @@ export default function TopPerformersStrip() {
             const swimAthlete = swimAthleteMap.get(athleteId);
             const name = swimAthlete?.name ?? `Athlete #${athleteId}`;
             const teamId = swimAthlete?.teamId ?? "";
-            const teamName = teamNameMap.get(teamId) ?? teamId;
+            const teamName = teamId ? slugToDisplayName(teamId) : "";
             const webAthlete = webAthleteByName.get(name);
 
             return {
@@ -168,7 +157,7 @@ export default function TopPerformersStrip() {
               timeMs,
               timeFormatted: formatSwimTime(timeMs),
               photoUrl: webAthlete?.photoUrl ?? null,
-              profileSlug: webAthlete?.id ?? null,
+              profileId: webAthlete?.id ?? null,
             };
           },
         );
@@ -289,7 +278,7 @@ export default function TopPerformersStrip() {
 }
 
 function PerformerCard({ performer }: { performer: Performer }) {
-  const { rank, name, teamName, timeFormatted, photoUrl, profileSlug } =
+  const { rank, name, teamName, timeFormatted, photoUrl, profileId } =
     performer;
 
   const isGold = rank === 1;
@@ -362,9 +351,9 @@ function PerformerCard({ performer }: { performer: Performer }) {
   );
 
   // If we have a profile ID, wrap in a link
-  if (profileSlug) {
+  if (profileId) {
     return (
-      <a href={`/athletes/${profileSlug}`} className="block">
+      <a href={`/athlete/${profileId}`} className="block">
         {cardContent}
       </a>
     );
