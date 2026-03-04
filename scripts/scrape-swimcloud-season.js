@@ -86,6 +86,10 @@ const TEAM_NAME_TO_SLUG = {
   Wisconsin: "wisconsin",
   Yale: "yale",
   Army: "army",
+  "Boston College": "boston-college",
+  "George Washington": "george-washington",
+  "Southern Illinois": "southern-illinois",
+  Pittsburgh: "pittsburgh",
 };
 
 // Map SwimCloud event name fragments → swim_events.event_id slugs
@@ -128,6 +132,14 @@ const EVENT_NAME_TO_SLUG = {
   "3m diving": "3m-diving",
   "10m diving": "platform-diving",
   "platform diving": "platform-diving",
+  "1 meter": "1m-diving",
+  "3 meter": "3m-diving",
+  platform: "platform-diving",
+  tower: "platform-diving",
+  "1-meter": "1m-diving",
+  "3-meter": "3m-diving",
+  "6 meter": "platform-diving",
+  "7.5 meter": "platform-diving",
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -567,11 +579,6 @@ async function main() {
       let meetResultCount = 0;
 
       for (const { eventId, eventUrl, eventName } of meetInfo.eventLinks) {
-        // Skip diving events
-        if (/diving|platform|springboard/i.test(eventName)) {
-          continue;
-        }
-
         // Scrape event
         const eventData = await scrapeEventPage(page, eventUrl);
         if (!eventData || eventData.results.length === 0) {
