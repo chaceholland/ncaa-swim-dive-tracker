@@ -1,35 +1,37 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { Team } from '@/lib/supabase/types';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import { useFavorites } from '@/lib/hooks/useFavorites';
-import { formatLastUpdated } from '@/lib/utils';
-import Navigation from '@/components/Navigation';
+import { useState, useEffect, useMemo } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { Team } from "@/lib/supabase/types";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { useFavorites } from "@/lib/hooks/useFavorites";
+import { formatLastUpdated } from "@/lib/utils";
+import Navigation from "@/components/Navigation";
+import FavoritesDrawer from "@/components/FavoritesDrawer";
 import FilterPills, {
   ViewMode,
   Conference,
   AthleteType,
   FilterCounts,
-} from '@/components/FilterPills';
-import HeroSection from '@/components/HeroSection';
-import ConferenceSection from '@/components/ConferenceSection';
+} from "@/components/FilterPills";
+import HeroSection from "@/components/HeroSection";
+import ConferenceSection from "@/components/ConferenceSection";
 
 /**
  * Group teams by conference
  */
-function groupTeamsByConference(
-  teams: Team[]
-): Record<string, Team[]> {
-  return teams.reduce((acc, team) => {
-    const conf = team.conference || 'other';
-    if (!acc[conf]) {
-      acc[conf] = [];
-    }
-    acc[conf].push(team);
-    return acc;
-  }, {} as Record<string, Team[]>);
+function groupTeamsByConference(teams: Team[]): Record<string, Team[]> {
+  return teams.reduce(
+    (acc, team) => {
+      const conf = team.conference || "other";
+      if (!acc[conf]) {
+        acc[conf] = [];
+      }
+      acc[conf].push(team);
+      return acc;
+    },
+    {} as Record<string, Team[]>,
+  );
 }
 
 /**
@@ -37,13 +39,13 @@ function groupTeamsByConference(
  */
 function getConferenceDisplayName(conferenceCode: string): string {
   const displayNames: Record<string, string> = {
-    'sec': 'SEC',
-    'big-ten': 'Big Ten',
-    'acc': 'ACC',
-    'big-12': 'Big 12',
-    'ivy': 'Ivy League',
-    'patriot': 'Patriot League',
-    'other': 'Other Conferences',
+    sec: "SEC",
+    "big-ten": "Big Ten",
+    acc: "ACC",
+    "big-12": "Big 12",
+    ivy: "Ivy League",
+    patriot: "Patriot League",
+    other: "Other Conferences",
   };
   return displayNames[conferenceCode.toLowerCase()] || conferenceCode;
 }
@@ -98,29 +100,37 @@ export default function Home() {
   // State
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<ViewMode>('rosters');
-  const [selectedConference, setSelectedConference] = useState<Conference>('all');
-  const [selectedAthleteType, setSelectedAthleteType] = useState<AthleteType>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<DataQualityIssue[]>('data-quality-issues', []);
+  const [viewMode, setViewMode] = useState<ViewMode>("rosters");
+  const [selectedConference, setSelectedConference] =
+    useState<Conference>("all");
+  const [selectedAthleteType, setSelectedAthleteType] =
+    useState<AthleteType>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<
+    DataQualityIssue[]
+  >("data-quality-issues", []);
 
   // Use Supabase-backed favorites
   const {
+    athleteFavorites,
     teamFavorites,
     toggleTeamFavorite,
     isTeamFavorite,
-    totalCount: favoritesCount
+    removeAthleteFavorite,
+    removeTeamFavorite,
+    totalCount: favoritesCount,
   } = useFavorites();
+  const [showFavoritesDrawer, setShowFavoritesDrawer] = useState(false);
   const [showIssuesModal, setShowIssuesModal] = useState(false);
 
   // Restore scroll position on mount
   useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
+    const savedScrollPosition = sessionStorage.getItem("homeScrollPosition");
     if (savedScrollPosition) {
       // Use setTimeout to ensure DOM is ready
       setTimeout(() => {
         window.scrollTo(0, parseInt(savedScrollPosition, 10));
-        sessionStorage.removeItem('homeScrollPosition');
+        sessionStorage.removeItem("homeScrollPosition");
       }, 100);
     }
   }, []);
@@ -131,19 +141,19 @@ export default function Home() {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('teams')
-          .select('*')
-          .gt('athlete_count', 0)
-          .order('athlete_count', { ascending: false });
+          .from("teams")
+          .select("*")
+          .gt("athlete_count", 0)
+          .order("athlete_count", { ascending: false });
 
         if (error) {
-          console.error('Error fetching teams:', error);
+          console.error("Error fetching teams:", error);
           return;
         }
 
         setTeams(data || []);
       } catch (error) {
-        console.error('Error fetching teams:', error);
+        console.error("Error fetching teams:", error);
       } finally {
         setLoading(false);
       }
@@ -166,8 +176,8 @@ export default function Home() {
       }
 
       // Conference filter
-      if (selectedConference !== 'all') {
-        const teamConf = team.conference.toLowerCase().replace(/\s+/g, '-');
+      if (selectedConference !== "all") {
+        const teamConf = team.conference.toLowerCase().replace(/\s+/g, "-");
         if (teamConf !== selectedConference) {
           return false;
         }
@@ -195,27 +205,27 @@ export default function Home() {
       conference: {
         all: teams.length,
         sec: 0,
-        'big-ten': 0,
+        "big-ten": 0,
         acc: 0,
-        'big-12': 0,
+        "big-12": 0,
         ivy: 0,
         other: 0,
       },
       athleteType: {
         all: teams.reduce((sum, t) => sum + t.athlete_count, 0),
         swimmers: 0, // Would need athlete data
-        divers: 0,   // Would need athlete data
+        divers: 0, // Would need athlete data
       },
     };
 
     // Count teams by conference
     teams.forEach((team) => {
-      const conf = team.conference.toLowerCase().replace(/\s+/g, '-');
-      if (conf === 'sec') counts.conference.sec++;
-      else if (conf === 'big-ten') counts.conference['big-ten']++;
-      else if (conf === 'acc') counts.conference.acc++;
-      else if (conf === 'big-12') counts.conference['big-12']++;
-      else if (conf === 'ivy' || conf === 'ivy-league') counts.conference.ivy++;
+      const conf = team.conference.toLowerCase().replace(/\s+/g, "-");
+      if (conf === "sec") counts.conference.sec++;
+      else if (conf === "big-ten") counts.conference["big-ten"]++;
+      else if (conf === "acc") counts.conference.acc++;
+      else if (conf === "big-12") counts.conference["big-12"]++;
+      else if (conf === "ivy" || conf === "ivy-league") counts.conference.ivy++;
       else counts.conference.other++;
     });
 
@@ -224,21 +234,20 @@ export default function Home() {
 
   // Handle favorite toggle
   const handleFavoriteToggle = (teamId: string) => {
-    const team = teams.find(t => t.id === teamId);
+    const team = teams.find((t) => t.id === teamId);
     if (team) {
       toggleTeamFavorite({
         id: team.id,
         name: team.name,
         conference: team.conference,
-        logo_url: team.logo_url || undefined
+        logo_url: team.logo_url || undefined,
       });
     }
   };
 
   // Handle favorites view
   const handleFavoritesClick = () => {
-    // TODO: Implement favorites modal/view
-    console.log('Favorites clicked:', teamFavorites);
+    setShowFavoritesDrawer(true);
   };
 
   // Handle missing data view
@@ -249,53 +258,53 @@ export default function Home() {
   // Copy issues to clipboard
   const handleCopyIssues = async () => {
     if (dataQualityIssues.length === 0) {
-      alert('No issues to copy');
+      alert("No issues to copy");
       return;
     }
 
     // Fetch all athletes with issues
-    const athleteIds = dataQualityIssues.map(issue => issue.athleteId);
+    const athleteIds = dataQualityIssues.map((issue) => issue.athleteId);
     const { data: athletes } = await supabase
-      .from('athletes')
-      .select('id, name, team_id')
-      .in('id', athleteIds);
+      .from("athletes")
+      .select("id, name, team_id")
+      .in("id", athleteIds);
 
     if (!athletes) return;
 
     // Fetch team names
-    const teamIds = [...new Set(athletes.map(a => a.team_id))];
+    const teamIds = [...new Set(athletes.map((a) => a.team_id))];
     const { data: teamsData } = await supabase
-      .from('teams')
-      .select('id, name')
-      .in('id', teamIds);
+      .from("teams")
+      .select("id, name")
+      .in("id", teamIds);
 
-    const teamMap = new Map(teamsData?.map(t => [t.id, t.name]) || []);
+    const teamMap = new Map(teamsData?.map((t) => [t.id, t.name]) || []);
 
     const issueReport = dataQualityIssues
-      .map(issue => {
-        const athlete = athletes.find(a => a.id === issue.athleteId);
+      .map((issue) => {
+        const athlete = athletes.find((a) => a.id === issue.athleteId);
         if (!athlete) return null;
 
-        const teamName = teamMap.get(athlete.team_id) || 'Unknown Team';
-        const issueText = issue.issues.join(', ');
-        const customText = issue.customNote ? ` - ${issue.customNote}` : '';
+        const teamName = teamMap.get(athlete.team_id) || "Unknown Team";
+        const issueText = issue.issues.join(", ");
+        const customText = issue.customNote ? ` - ${issue.customNote}` : "";
         return `${athlete.name} (${teamName}): ${issueText}${customText}`;
       })
       .filter(Boolean)
-      .join('\n');
+      .join("\n");
 
     try {
       await navigator.clipboard.writeText(issueReport);
       alert(`Copied ${dataQualityIssues.length} issues to clipboard!`);
     } catch (err) {
-      console.error('Failed to copy:', err);
-      alert('Failed to copy issues');
+      console.error("Failed to copy:", err);
+      alert("Failed to copy issues");
     }
   };
 
   // Convert team favorites to Set for faster lookups
   const favoriteTeamIdsSet = useMemo(() => {
-    return new Set(teamFavorites.map(f => f.id));
+    return new Set(teamFavorites.map((f) => f.id));
   }, [teamFavorites]);
 
   return (
@@ -336,13 +345,13 @@ export default function Home() {
           .sort(([confA], [confB]) => {
             // Sort conferences by priority
             const priority: Record<string, number> = {
-              'sec': 1,
-              'big-ten': 2,
-              'acc': 3,
-              'big-12': 4,
-              'ivy': 5,
-              'patriot': 6,
-              'other': 99,
+              sec: 1,
+              "big-ten": 2,
+              acc: 3,
+              "big-12": 4,
+              ivy: 5,
+              patriot: 6,
+              other: 99,
             };
             const prioA = priority[confA.toLowerCase()] || 50;
             const prioB = priority[confB.toLowerCase()] || 50;
@@ -385,9 +394,9 @@ export default function Home() {
             </p>
             <button
               onClick={() => {
-                setSearchQuery('');
-                setSelectedConference('all');
-                setSelectedAthleteType('all');
+                setSearchQuery("");
+                setSelectedConference("all");
+                setSelectedAthleteType("all");
               }}
               className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-medium hover:shadow-lg transition-all"
             >
@@ -407,6 +416,16 @@ export default function Home() {
           teams={teams}
         />
       )}
+
+      {/* Favorites Slide-Over Drawer */}
+      <FavoritesDrawer
+        isOpen={showFavoritesDrawer}
+        onClose={() => setShowFavoritesDrawer(false)}
+        athletes={athleteFavorites}
+        teams={teamFavorites}
+        onRemoveAthlete={removeAthleteFavorite}
+        onRemoveTeam={removeTeamFavorite}
+      />
     </main>
   );
 }
@@ -435,11 +454,11 @@ function DataQualityModal({
         return;
       }
 
-      const athleteIds = issues.map(issue => issue.athleteId);
+      const athleteIds = issues.map((issue) => issue.athleteId);
       const { data } = await supabase
-        .from('athletes')
-        .select('id, name, team_id, photo_url')
-        .in('id', athleteIds);
+        .from("athletes")
+        .select("id, name, team_id, photo_url")
+        .in("id", athleteIds);
 
       setAthletes(data || []);
       setLoading(false);
@@ -448,10 +467,13 @@ function DataQualityModal({
     fetchAthletes();
   }, [issues]);
 
-  const teamMap = new Map(teams.map(t => [t.id, t]));
+  const teamMap = new Map(teams.map((t) => [t.id, t]));
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
         className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -459,8 +481,12 @@ function DataQualityModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-orange-50 to-red-50">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Data Quality Issues</h2>
-            <p className="text-sm text-slate-600 mt-1">{issues.length} athletes with reported issues</p>
+            <h2 className="text-2xl font-bold text-slate-900">
+              Data Quality Issues
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">
+              {issues.length} athletes with reported issues
+            </p>
           </div>
           <div className="flex gap-2">
             {issues.length > 0 && (
@@ -469,21 +495,43 @@ function DataQualityModal({
                   onClick={onCopyIssues}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
                   </svg>
                   Copy All Issues
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm(`Clear all ${issues.length} data quality issues?`)) {
+                    if (
+                      confirm(`Clear all ${issues.length} data quality issues?`)
+                    ) {
                       onClearAll();
                     }
                   }}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                   Clear All Issues
                 </button>
@@ -494,8 +542,18 @@ function DataQualityModal({
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-700 hover:text-slate-900"
               aria-label="Close modal"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -510,24 +568,45 @@ function DataQualityModal({
             </div>
           ) : issues.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="w-16 h-16 mx-auto mb-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-16 h-16 mx-auto mb-4 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No Issues Reported</h3>
-              <p className="text-slate-600">All athletes have clean data quality</p>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                No Issues Reported
+              </h3>
+              <p className="text-slate-600">
+                All athletes have clean data quality
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {athletes.map(athlete => {
-                const issue = issues.find(i => i.athleteId === athlete.id);
+              {athletes.map((athlete) => {
+                const issue = issues.find((i) => i.athleteId === athlete.id);
                 const team = teamMap.get(athlete.team_id);
 
                 return (
-                  <div key={athlete.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <div
+                    key={athlete.id}
+                    className="bg-slate-50 rounded-lg p-4 border border-slate-200"
+                  >
                     <div className="flex gap-3">
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-200 flex-shrink-0">
                         {athlete.photo_url ? (
-                          <img src={athlete.photo_url} alt={athlete.name} className="w-full h-full object-cover" />
+                          <img
+                            src={athlete.photo_url}
+                            alt={athlete.name}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-slate-400">
                             {athlete.name.charAt(0)}
@@ -535,8 +614,12 @@ function DataQualityModal({
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-slate-900 truncate">{athlete.name}</h3>
-                        <p className="text-sm text-slate-600 truncate">{team?.name || 'Unknown Team'}</p>
+                        <h3 className="font-semibold text-slate-900 truncate">
+                          {athlete.name}
+                        </h3>
+                        <p className="text-sm text-slate-600 truncate">
+                          {team?.name || "Unknown Team"}
+                        </p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           {issue?.issues.map((issueType, idx) => (
                             <span
@@ -548,7 +631,9 @@ function DataQualityModal({
                           ))}
                         </div>
                         {issue?.customNote && (
-                          <p className="mt-2 text-xs text-slate-600 italic">{issue.customNote}</p>
+                          <p className="mt-2 text-xs text-slate-600 italic">
+                            {issue.customNote}
+                          </p>
                         )}
                       </div>
                     </div>
