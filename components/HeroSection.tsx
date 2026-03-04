@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion, useAnimation } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { useInView } from 'react-intersection-observer';
+import { motion, useAnimation } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
 
 interface StatCardProps {
   value: number;
@@ -47,13 +47,13 @@ const StatCard = ({ value, label, highlight = false }: StatCardProps) => {
       ref={ref}
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
       className={`
         relative overflow-hidden rounded-2xl p-8 backdrop-blur-sm
         ${
           highlight
-            ? 'bg-orange-500/20 border-2 border-orange-500/50'
-            : 'bg-white/10 border-2 border-white/20'
+            ? "bg-orange-500/20 border-2 border-orange-500/50"
+            : "bg-white/10 border-2 border-white/20"
         }
         hover:scale-105 transition-transform duration-300
       `}
@@ -62,7 +62,7 @@ const StatCard = ({ value, label, highlight = false }: StatCardProps) => {
         <div
           className={`
             text-5xl md:text-6xl font-bold mb-2
-            ${highlight ? 'text-orange-300' : 'text-brand-cyan'}
+            ${highlight ? "text-orange-300" : "text-brand-cyan"}
           `}
         >
           {count.toLocaleString()}
@@ -78,8 +78,8 @@ const StatCard = ({ value, label, highlight = false }: StatCardProps) => {
           absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500
           ${
             highlight
-              ? 'bg-gradient-to-br from-orange-500/20 to-orange-600/20'
-              : 'bg-gradient-to-br from-brand-cyan/20 to-blue-500/20'
+              ? "bg-gradient-to-br from-orange-500/20 to-orange-600/20"
+              : "bg-gradient-to-br from-brand-cyan/20 to-blue-500/20"
           }
         `}
       />
@@ -87,7 +87,17 @@ const StatCard = ({ value, label, highlight = false }: StatCardProps) => {
   );
 };
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  teamCount: number;
+  athleteCount: number;
+  meetCount: number;
+}
+
+export default function HeroSection({
+  teamCount,
+  athleteCount,
+  meetCount,
+}: HeroSectionProps) {
   const controls = useAnimation();
   const [mounted, setMounted] = useState(false);
 
@@ -95,10 +105,10 @@ export default function HeroSection() {
     setMounted(true);
     // Start gradient animation
     controls.start({
-      backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
       transition: {
         duration: 8,
-        ease: 'linear',
+        ease: "linear",
         repeat: Infinity,
       },
     });
@@ -115,7 +125,7 @@ export default function HeroSection() {
         className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#1E3A5F] to-[#0A1628]"
         animate={controls}
         style={{
-          backgroundSize: '200% 200%',
+          backgroundSize: "200% 200%",
         }}
       />
 
@@ -123,10 +133,10 @@ export default function HeroSection() {
       <div
         className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: 'url(/wave-pattern.svg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundImage: "url(/wave-pattern.svg)",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       />
 
@@ -137,7 +147,7 @@ export default function HeroSection() {
           <motion.div
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-8"
           >
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
@@ -155,8 +165,8 @@ export default function HeroSection() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto"
             >
-              Track every team and athlete across Division I men's
-              swimming and diving
+              Track every team and athlete across Division I men's swimming and
+              diving
             </motion.p>
           </motion.div>
 
@@ -167,9 +177,9 @@ export default function HeroSection() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12"
           >
-            <StatCard value={53} label="D1 Men's Teams" />
-            <StatCard value={1628} label="Athletes" />
-            <StatCard value={45} label="Teams with Data" highlight />
+            <StatCard value={teamCount} label="D1 Men's Teams" />
+            <StatCard value={athleteCount} label="Athletes" />
+            <StatCard value={meetCount} label="Meets Tracked" highlight />
           </motion.div>
 
           {/* Last updated timestamp */}
@@ -179,10 +189,11 @@ export default function HeroSection() {
             transition={{ delay: 0.8, duration: 0.8 }}
             className="text-center text-white/60 text-sm"
           >
-            Last updated: {new Date().toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
+            Last updated:{" "}
+            {new Date().toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
             })}
           </motion.div>
         </div>
@@ -201,7 +212,7 @@ export default function HeroSection() {
           }}
           transition={{
             duration: 1.5,
-            ease: 'easeInOut',
+            ease: "easeInOut",
             repeat: Infinity,
           }}
           className="flex flex-col items-center gap-2"

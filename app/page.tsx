@@ -16,6 +16,7 @@ import FilterPills, {
 } from "@/components/FilterPills";
 import HeroSection from "@/components/HeroSection";
 import ConferenceSection from "@/components/ConferenceSection";
+import TopPerformersStrip from "@/components/TopPerformersStrip";
 
 /**
  * Group teams by conference
@@ -100,6 +101,7 @@ export default function Home() {
   // State
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+  const [meetCount, setMeetCount] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("rosters");
   const [selectedConference, setSelectedConference] =
     useState<Conference>("all");
@@ -152,6 +154,12 @@ export default function Home() {
         }
 
         setTeams(data || []);
+
+        // Fetch meet count for live stat
+        const { count } = await supabase
+          .from("swim_meets")
+          .select("id", { count: "exact", head: true });
+        setMeetCount(count ?? 0);
       } catch (error) {
         console.error("Error fetching teams:", error);
       } finally {
@@ -329,7 +337,14 @@ export default function Home() {
       />
 
       {/* Hero Section */}
-      <HeroSection />
+      <HeroSection
+        teamCount={teams.length}
+        athleteCount={teams.reduce((s, t) => s + t.athlete_count, 0)}
+        meetCount={meetCount}
+      />
+
+      {/* Top Performers Strip */}
+      {!loading && <TopPerformersStrip />}
 
       {/* Conference Sections */}
       {loading ? (
