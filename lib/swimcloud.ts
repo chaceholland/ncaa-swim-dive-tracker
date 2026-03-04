@@ -6,11 +6,18 @@ import type {
   MeetDetailResult,
 } from "@/lib/supabase/types";
 
+// Some teams use a non-standard slug in swim_teams/swim_athletes
+// that doesn't match the simple hyphenated form of their name.
+const TEAM_SLUG_OVERRIDES: Record<string, string> = {
+  virginia: "uva",
+};
+
 export function teamNameToSlug(name: string): string {
-  return name
+  const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+  return TEAM_SLUG_OVERRIDES[slug] ?? slug;
 }
 
 export function formatSwimTime(ms: number): string {
