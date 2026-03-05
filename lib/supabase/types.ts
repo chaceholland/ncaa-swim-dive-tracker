@@ -21,6 +21,7 @@ export interface Athlete {
   class_year: "freshman" | "sophomore" | "junior" | "senior";
   hometown: string | null;
   profile_url: string | null;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 }

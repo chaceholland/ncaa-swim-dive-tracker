@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
-import { Team, Athlete } from '@/lib/supabase/types';
-import { getTeamGradient, getTeamInitials } from '@/lib/utils';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import { isExternalUrl } from '@/lib/image-utils';
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
+import { Team, Athlete } from "@/lib/supabase/types";
+import { getTeamGradient, getTeamInitials } from "@/lib/utils";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { createPortal } from "react-dom";
+import { isExternalUrl } from "@/lib/image-utils";
 
 type DataQualityIssue = {
   athleteId: string;
@@ -23,8 +23,13 @@ export default function TeamRosterPage() {
   const [team, setTeam] = useState<Team | null>(null);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
-  const [favoriteAthleteIds, setFavoriteAthleteIds] = useLocalStorage<string[]>('favorite-athletes', []);
-  const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<DataQualityIssue[]>('data-quality-issues', []);
+  const [favoriteAthleteIds, setFavoriteAthleteIds] = useLocalStorage<string[]>(
+    "favorite-athletes",
+    [],
+  );
+  const [dataQualityIssues, setDataQualityIssues] = useLocalStorage<
+    DataQualityIssue[]
+  >("data-quality-issues", []);
   const [showIssuesOnly, setShowIssuesOnly] = useState(false);
 
   useEffect(() => {
@@ -34,9 +39,9 @@ export default function TeamRosterPage() {
       try {
         // Fetch team details
         const { data: teamData, error: teamError } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('id', params.id)
+          .from("teams")
+          .select("*")
+          .eq("id", params.id)
           .single();
 
         if (teamError) throw teamError;
@@ -44,15 +49,16 @@ export default function TeamRosterPage() {
 
         // Fetch athletes for this team
         const { data: athletesData, error: athletesError } = await supabase
-          .from('athletes')
-          .select('*')
-          .eq('team_id', params.id)
-          .order('name');
+          .from("athletes")
+          .select("*")
+          .eq("team_id", params.id)
+          .eq("is_archived", false)
+          .order("name");
 
         if (athletesError) throw athletesError;
         setAthletes(athletesData || []);
       } catch (error) {
-        console.error('Error fetching team data:', error);
+        console.error("Error fetching team data:", error);
       } finally {
         setLoading(false);
       }
@@ -68,7 +74,7 @@ export default function TeamRosterPage() {
 
   const dataQualityIssuesMap = useMemo(() => {
     const map = new Map<string, DataQualityIssue>();
-    dataQualityIssues.forEach(issue => {
+    dataQualityIssues.forEach((issue) => {
       map.set(issue.athleteId, issue);
     });
     return map;
@@ -76,9 +82,9 @@ export default function TeamRosterPage() {
 
   // Handle favorite toggle
   const handleFavoriteToggle = (athleteId: string) => {
-    setFavoriteAthleteIds(prev => {
+    setFavoriteAthleteIds((prev) => {
       if (prev.includes(athleteId)) {
-        return prev.filter(id => id !== athleteId);
+        return prev.filter((id) => id !== athleteId);
       } else {
         return [...prev, athleteId];
       }
@@ -86,21 +92,25 @@ export default function TeamRosterPage() {
   };
 
   // Handle data quality issue toggle
-  const handleIssueToggle = (athleteId: string, selectedIssues: string[], customNote?: string) => {
-    setDataQualityIssues(prev => {
-      const existing = prev.find(issue => issue.athleteId === athleteId);
+  const handleIssueToggle = (
+    athleteId: string,
+    selectedIssues: string[],
+    customNote?: string,
+  ) => {
+    setDataQualityIssues((prev) => {
+      const existing = prev.find((issue) => issue.athleteId === athleteId);
 
       if (selectedIssues.length === 0 && !customNote) {
         // Remove if no issues selected
-        return prev.filter(issue => issue.athleteId !== athleteId);
+        return prev.filter((issue) => issue.athleteId !== athleteId);
       }
 
       if (existing) {
         // Update existing
-        return prev.map(issue =>
+        return prev.map((issue) =>
           issue.athleteId === athleteId
             ? { athleteId, issues: selectedIssues, customNote }
-            : issue
+            : issue,
         );
       } else {
         // Add new
@@ -112,29 +122,29 @@ export default function TeamRosterPage() {
   // Copy issues to clipboard
   const handleCopyIssues = async () => {
     const issueReport = dataQualityIssues
-      .map(issue => {
-        const athlete = athletes.find(a => a.id === issue.athleteId);
+      .map((issue) => {
+        const athlete = athletes.find((a) => a.id === issue.athleteId);
         if (!athlete) return null;
 
-        const issueText = issue.issues.join(', ');
-        const customText = issue.customNote ? ` - ${issue.customNote}` : '';
+        const issueText = issue.issues.join(", ");
+        const customText = issue.customNote ? ` - ${issue.customNote}` : "";
         return `${athlete.name} (${team?.name}): ${issueText}${customText}`;
       })
       .filter(Boolean)
-      .join('\n');
+      .join("\n");
 
     try {
       await navigator.clipboard.writeText(issueReport);
-      alert('Issues copied to clipboard!');
+      alert("Issues copied to clipboard!");
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
     }
   };
 
   // Filter athletes
   const displayedAthletes = useMemo(() => {
     if (showIssuesOnly) {
-      return athletes.filter(athlete => dataQualityIssuesMap.has(athlete.id));
+      return athletes.filter((athlete) => dataQualityIssuesMap.has(athlete.id));
     }
     return athletes;
   }, [athletes, showIssuesOnly, dataQualityIssuesMap]);
@@ -154,7 +164,9 @@ export default function TeamRosterPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Team not found</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            Team not found
+          </h1>
           <button
             onClick={() => router.back()}
             className="text-blue-600 hover:text-blue-700 font-medium"
@@ -183,8 +195,18 @@ export default function TeamRosterPage() {
             onClick={() => router.back()}
             className="absolute top-6 left-6 text-white/80 hover:text-white flex items-center gap-2 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Teams
           </button>
@@ -211,7 +233,10 @@ export default function TeamRosterPage() {
                   />
                 )
               ) : (
-                <span className="text-3xl font-bold" style={{ color: team.primary_color }}>
+                <span
+                  className="text-3xl font-bold"
+                  style={{ color: team.primary_color }}
+                >
                   {getTeamInitials(team.name)}
                 </span>
               )}
@@ -225,7 +250,9 @@ export default function TeamRosterPage() {
                   {team.athlete_count} athletes
                 </span>
               </div>
-              <p className="text-xl text-white/90">{team.conference_display_name}</p>
+              <p className="text-xl text-white/90">
+                {team.conference_display_name}
+              </p>
             </div>
           </div>
         </div>
@@ -243,31 +270,57 @@ export default function TeamRosterPage() {
                   onClick={() => setShowIssuesOnly(!showIssuesOnly)}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     showIssuesOnly
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      ? "bg-orange-600 text-white"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
                   }`}
                 >
-                  {showIssuesOnly ? 'Show All' : `Show Issues (${dataQualityIssues.length})`}
+                  {showIssuesOnly
+                    ? "Show All"
+                    : `Show Issues (${dataQualityIssues.length})`}
                 </button>
                 <button
                   onClick={handleCopyIssues}
                   className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
                   </svg>
                   Copy Issues
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm(`Clear all ${dataQualityIssues.length} data quality issues?`)) {
+                    if (
+                      confirm(
+                        `Clear all ${dataQualityIssues.length} data quality issues?`,
+                      )
+                    ) {
                       setDataQualityIssues([]);
                     }
                   }}
                   className="px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                   Clear All Issues
                 </button>
@@ -278,7 +331,9 @@ export default function TeamRosterPage() {
 
         {displayedAthletes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-slate-600 text-lg">No athletes found for this team.</p>
+            <p className="text-slate-600 text-lg">
+              No athletes found for this team.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -288,172 +343,191 @@ export default function TeamRosterPage() {
               const issueData = dataQualityIssuesMap.get(athlete.id);
 
               return (
-              <motion.div
-                key={athlete.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer"
-                onClick={() => {
-                  if (athlete.profile_url) {
-                    window.open(athlete.profile_url, '_blank', 'noopener,noreferrer');
-                  }
-                }}
-              >
-                {/* Athlete Photo */}
-                <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
-                  {athlete.photo_url ? (
-                    isExternalUrl(athlete.photo_url) ? (
-                      // Raw img for all external URLs to avoid hotlink/CDN issues
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={athlete.photo_url}
-                        alt={athlete.name}
-                        loading={index < 8 ? undefined : 'lazy'}
-                        referrerPolicy="no-referrer"
-                        className={`w-full h-full object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
-                      />
+                <motion.div
+                  key={athlete.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer"
+                  onClick={() => {
+                    if (athlete.profile_url) {
+                      window.open(
+                        athlete.profile_url,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }
+                  }}
+                >
+                  {/* Athlete Photo */}
+                  <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
+                    {athlete.photo_url ? (
+                      isExternalUrl(athlete.photo_url) ? (
+                        // Raw img for all external URLs to avoid hotlink/CDN issues
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={athlete.photo_url}
+                          alt={athlete.name}
+                          loading={index < 8 ? undefined : "lazy"}
+                          referrerPolicy="no-referrer"
+                          className={`w-full h-full object-cover ${team.name === "Columbia" ? "object-[center_80%]" : "object-top"}`}
+                        />
+                      ) : (
+                        <Image
+                          src={athlete.photo_url}
+                          alt={athlete.name}
+                          fill
+                          className={`object-cover ${team.name === "Columbia" ? "object-[center_80%]" : "object-top"}`}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          quality={95}
+                          priority={index < 8}
+                        />
+                      )
+                    ) : team.logo_url ? (
+                      <div
+                        className="w-full h-full flex items-center justify-center p-8"
+                        style={{
+                          background: `linear-gradient(135deg, ${team.primary_color}, ${team.secondary_color})`,
+                        }}
+                      >
+                        <Image
+                          src={team.logo_url}
+                          alt={team.name}
+                          width={120}
+                          height={120}
+                          className="object-contain"
+                        />
+                      </div>
                     ) : (
-                      <Image
-                        src={athlete.photo_url}
-                        alt={athlete.name}
-                        fill
-                        className={`object-cover ${team.name === 'Columbia' ? 'object-[center_80%]' : 'object-top'}`}
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        quality={95}
-                        priority={index < 8}
-                      />
-                    )
-                  ) : team.logo_url ? (
-                    <div
-                      className="w-full h-full flex items-center justify-center p-8"
-                      style={{
-                        background: `linear-gradient(135deg, ${team.primary_color}, ${team.secondary_color})`,
-                      }}
-                    >
-                      <Image
-                        src={team.logo_url}
-                        alt={team.name}
-                        width={120}
-                        height={120}
-                        className="object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center text-6xl font-bold text-white"
-                      style={{
-                        background: `linear-gradient(135deg, ${team.primary_color}, ${team.secondary_color})`,
-                      }}
-                    >
-                      {athlete.name.charAt(0)}
-                    </div>
-                  )}
+                      <div
+                        className="w-full h-full flex items-center justify-center text-6xl font-bold text-white"
+                        style={{
+                          background: `linear-gradient(135deg, ${team.primary_color}, ${team.secondary_color})`,
+                        }}
+                      >
+                        {athlete.name.charAt(0)}
+                      </div>
+                    )}
 
-                  {/* Athlete Type Badge */}
-                  {athlete.athlete_type && (
-                    <div className="absolute top-3 right-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
-                          athlete.athlete_type === 'diver' ? 'bg-blue-600' : 'bg-emerald-600'
+                    {/* Athlete Type Badge */}
+                    {athlete.athlete_type && (
+                      <div className="absolute top-3 right-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
+                            athlete.athlete_type === "diver"
+                              ? "bg-blue-600"
+                              : "bg-emerald-600"
+                          }`}
+                        >
+                          {athlete.athlete_type === "diver"
+                            ? "Diver"
+                            : "Swimmer"}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="absolute bottom-3 right-3 flex gap-2">
+                      {/* Favorite Button */}
+                      <motion.button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleFavoriteToggle(athlete.id);
+                        }}
+                        className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
+                          isFavorite
+                            ? "bg-white/90 text-yellow-500"
+                            : "bg-black/30 text-white hover:bg-black/50"
                         }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        aria-label={
+                          isFavorite
+                            ? "Remove from favorites"
+                            : "Add to favorites"
+                        }
                       >
-                        {athlete.athlete_type === 'diver' ? 'Diver' : 'Swimmer'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="absolute bottom-3 right-3 flex gap-2">
-                    {/* Favorite Button */}
-                    <motion.button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleFavoriteToggle(athlete.id);
-                      }}
-                      className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
-                        isFavorite
-                          ? 'bg-white/90 text-yellow-500'
-                          : 'bg-black/30 text-white hover:bg-black/50'
-                      }`}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill={isFavorite ? 'currentColor' : 'none'}
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                        />
-                      </svg>
-                    </motion.button>
-
-                    {/* Report Issue Button */}
-                    <IssueButton
-                      athleteId={athlete.id}
-                      hasIssue={hasIssue}
-                      issueData={issueData}
-                      onIssueToggle={handleIssueToggle}
-                    />
-                  </div>
-                </div>
-
-                {/* Athlete Info */}
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-lg font-bold text-slate-900">{athlete.name}</h3>
-                    {athlete.profile_url && (
-                      <svg
-                        className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                      </svg>
-                    )}
-                  </div>
-
-                  <div className="space-y-1 text-sm text-slate-600">
-                    {athlete.class_year && (
-                      <p className="capitalize">{athlete.class_year}</p>
-                    )}
-                    {athlete.hometown && (
-                      <p className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-5 h-5"
+                          fill={isFavorite ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
                           />
                         </svg>
-                        {athlete.hometown}
-                      </p>
-                    )}
+                      </motion.button>
+
+                      {/* Report Issue Button */}
+                      <IssueButton
+                        athleteId={athlete.id}
+                        hasIssue={hasIssue}
+                        issueData={issueData}
+                        onIssueToggle={handleIssueToggle}
+                      />
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            );
+
+                  {/* Athlete Info */}
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-lg font-bold text-slate-900">
+                        {athlete.name}
+                      </h3>
+                      {athlete.profile_url && (
+                        <svg
+                          className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
+                        </svg>
+                      )}
+                    </div>
+
+                    <div className="space-y-1 text-sm text-slate-600">
+                      {athlete.class_year && (
+                        <p className="capitalize">{athlete.class_year}</p>
+                      )}
+                      {athlete.hometown && (
+                        <p className="flex items-center gap-1">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          {athlete.hometown}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
             })}
           </div>
         )}
@@ -472,11 +546,15 @@ function IssueButton({
   athleteId: string;
   hasIssue: boolean;
   issueData?: DataQualityIssue;
-  onIssueToggle: (athleteId: string, issues: string[], customNote?: string) => void;
+  onIssueToggle: (
+    athleteId: string,
+    issues: string[],
+    customNote?: string,
+  ) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
-  const [customNote, setCustomNote] = useState('');
+  const [customNote, setCustomNote] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -489,31 +567,31 @@ function IssueButton({
   useEffect(() => {
     if (showMenu) {
       setSelectedIssues(issueData?.issues || []);
-      setCustomNote(issueData?.customNote || '');
-      setShowCustomInput((issueData?.issues || []).includes('Misc.'));
+      setCustomNote(issueData?.customNote || "");
+      setShowCustomInput((issueData?.issues || []).includes("Misc."));
     }
   }, [showMenu, issueData]);
 
   const issueOptions = [
-    'Female athlete',
-    'Coach not needed',
-    'Missing Headshot',
-    'Missing position',
-    'Missing URL link',
-    'Wrong classification',
-    'No height/weight',
-    'No hometown',
-    'Misc.',
+    "Female athlete",
+    "Coach not needed",
+    "Missing Headshot",
+    "Missing position",
+    "Missing URL link",
+    "Wrong classification",
+    "No height/weight",
+    "No hometown",
+    "Misc.",
   ];
 
   const handleIssueSelect = (issue: string) => {
-    if (issue === 'Misc.') {
+    if (issue === "Misc.") {
       setShowCustomInput(!showCustomInput);
     }
 
-    setSelectedIssues(prev => {
+    setSelectedIssues((prev) => {
       if (prev.includes(issue)) {
-        return prev.filter(i => i !== issue);
+        return prev.filter((i) => i !== issue);
       } else {
         return [...prev, issue];
       }
@@ -527,9 +605,9 @@ function IssueButton({
 
   const handleClear = () => {
     setSelectedIssues([]);
-    setCustomNote('');
+    setCustomNote("");
     setShowCustomInput(false);
-    onIssueToggle(athleteId, [], '');
+    onIssueToggle(athleteId, [], "");
     setShowMenu(false);
   };
 
@@ -543,13 +621,18 @@ function IssueButton({
         }}
         className={`p-2 rounded-full backdrop-blur-sm transition-all hover:scale-110 active:scale-95 ${
           hasIssue
-            ? 'bg-orange-500 text-white hover:bg-orange-600'
-            : 'bg-black/30 text-white hover:bg-black/50'
+            ? "bg-orange-500 text-white hover:bg-orange-600"
+            : "bg-black/30 text-white hover:bg-black/50"
         }`}
         aria-label="Report data quality issue"
         type="button"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -559,86 +642,100 @@ function IssueButton({
         </svg>
       </button>
 
-      {showMenu && mounted && createPortal(
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowMenu(false)}
-        >
+      {showMenu &&
+        mounted &&
+        createPortal(
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={() => setShowMenu(false)}
           >
-            <div className="p-6 border-b border-slate-200 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">Data Quality Issues</h3>
+            <div
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <div className="p-6 border-b border-slate-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Data Quality Issues
+                  </h3>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowMenu(false);
+                    }}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-700 hover:text-slate-900 flex-shrink-0"
+                    aria-label="Close modal"
+                    type="button"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto flex-1">
+                <div className="space-y-3">
+                  {issueOptions.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-3 rounded-lg transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIssues.includes(option)}
+                        onChange={() => handleIssueSelect(option)}
+                        className="w-5 h-5 text-blue-600 bg-white border-2 border-slate-300 rounded cursor-pointer focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 checked:bg-blue-600 checked:border-blue-600 accent-blue-600"
+                      />
+                      <span className="text-base text-slate-700">{option}</span>
+                    </label>
+                  ))}
+
+                  {showCustomInput && (
+                    <textarea
+                      value={customNote}
+                      onChange={(e) => setCustomNote(e.target.value)}
+                      placeholder="Describe the issue..."
+                      className="w-full mt-3 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={4}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-slate-200 flex gap-3">
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowMenu(false);
-                  }}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-700 hover:text-slate-900 flex-shrink-0"
-                  aria-label="Close modal"
-                  type="button"
+                  onClick={handleClear}
+                  className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Clear
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Save
                 </button>
               </div>
             </div>
-
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="space-y-3">
-                {issueOptions.map(option => (
-                  <label
-                    key={option}
-                    className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-3 rounded-lg transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIssues.includes(option)}
-                      onChange={() => handleIssueSelect(option)}
-                      className="w-5 h-5 text-blue-600 bg-white border-2 border-slate-300 rounded cursor-pointer focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 checked:bg-blue-600 checked:border-blue-600 accent-blue-600"
-                    />
-                    <span className="text-base text-slate-700">{option}</span>
-                  </label>
-                ))}
-
-                {showCustomInput && (
-                  <textarea
-                    value={customNote}
-                    onChange={(e) => setCustomNote(e.target.value)}
-                    placeholder="Describe the issue..."
-                    className="w-full mt-3 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={4}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-200 flex gap-3">
-              <button
-                onClick={handleClear}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
-              >
-                Clear
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

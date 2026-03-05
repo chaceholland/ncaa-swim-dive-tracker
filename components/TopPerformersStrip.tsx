@@ -123,6 +123,7 @@ export default function TopPerformersStrip() {
         const { data: webAthletes } = await supabase
           .from("athletes")
           .select("id, name, photo_url, team_id")
+          .eq("is_archived", false)
           .in("name", athleteNames);
 
         // Build a name -> web athlete lookup (take first match)
