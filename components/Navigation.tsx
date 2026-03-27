@@ -31,12 +31,15 @@ export default function Navigation({
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [dropdownQuery, setDropdownQuery] = useState("");
-  const [athleteResults, setAthleteResults] = useState<
-    Pick<
-      Athlete,
-      "id" | "name" | "photo_url" | "class_year" | "athlete_type" | "team_id"
-    >[]
-  >([]);
+  type AthleteSearchResult = Pick<
+    Athlete,
+    "id" | "name" | "photo_url" | "class_year" | "athlete_type" | "team_id"
+  > & {
+    team_logo_url?: string | null;
+  };
+  const [athleteResults, setAthleteResults] = useState<AthleteSearchResult[]>(
+    [],
+  );
   const [teamResults, setTeamResults] = useState<
     Pick<Team, "id" | "name" | "logo_url" | "conference_display_name">[]
   >([]);
@@ -74,7 +77,32 @@ export default function Navigation({
           .ilike("name", q)
           .limit(3),
       ]);
-      setAthleteResults(athletes || []);
+
+      // Fetch team logos for athlete results
+      const athleteList = athletes || [];
+      const teamIds = [
+        ...new Set(athleteList.map((a) => a.team_id).filter(Boolean)),
+      ];
+      const teamLogoMap = new Map<string, string>();
+      if (teamIds.length > 0) {
+        const { data: teamLogos } = await supabase
+          .from("teams")
+          .select("id, logo_url, logo_fallback_url")
+          .in("id", teamIds);
+        for (const t of teamLogos ?? []) {
+          const logo = t.logo_url || t.logo_fallback_url;
+          if (logo) teamLogoMap.set(t.id, logo);
+        }
+      }
+
+      setAthleteResults(
+        athleteList.map((a) => ({
+          ...a,
+          team_logo_url: a.team_id
+            ? (teamLogoMap.get(a.team_id) ?? null)
+            : null,
+        })),
+      );
       setTeamResults(teams || []);
       setShowDropdown(true);
     }, 300);
@@ -111,18 +139,19 @@ export default function Navigation({
             <div className="text-primary">
               <svg
                 className="h-8 w-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                viewBox="0 0 64 64"
+                fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
                 aria-hidden="true"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
-                />
+                {/* Head */}
+                <circle cx="48" cy="10" r="6" />
+                {/* Body — horizontal swimmer in freestyle */}
+                <path d="M4 32 C10 28 18 26 26 29 L38 22 C40 21 43 22 44 24 L46 29 C50 27 54 26 60 27 L60 33 C54 32 49 33 45 36 C41 38 36 39 30 37 C24 35 16 36 8 40 L4 38 Z" />
+                {/* Kick — trailing legs */}
+                <path d="M4 38 C8 36 12 37 14 40 L10 43 C8 41 6 40 4 41 Z" />
+                {/* Wave */}
+                <path d="M2 50 C8 46 14 50 20 50 C26 50 32 46 38 46 C44 46 50 50 56 50 C58 50 60 49 62 48 L62 54 C60 55 58 56 56 56 C50 56 44 52 38 52 C32 52 26 56 20 56 C14 56 8 52 2 56 Z" />
               </svg>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -295,6 +324,13 @@ export default function Navigation({
                                   className="rounded-full object-cover"
                                 />
                               )
+                            ) : athlete.team_logo_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={athlete.team_logo_url}
+                                alt={athlete.name}
+                                className="w-10 h-10 rounded-full object-contain p-0.5 bg-white"
+                              />
                             ) : (
                               <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
                                 <span className="text-slate-600 text-sm font-semibold">
@@ -570,6 +606,13 @@ export default function Navigation({
                                 className="rounded-full object-cover"
                               />
                             )
+                          ) : athlete.team_logo_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={athlete.team_logo_url}
+                              alt={athlete.name}
+                              className="w-10 h-10 rounded-full object-contain p-0.5 bg-white"
+                            />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
                               <span className="text-slate-600 text-sm font-semibold">

@@ -1,0 +1,250 @@
+// Updated background.js with custom handlers for Kentucky, LSU
+console.log('=== BACKGROUND SCRIPT LOADED ===');
+
+const SUPABASE_URL = 'https://dtnozcqkuzhjmjvsfjqk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0bm96Y3FrdXpoam1qdnNmanFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MDY4MzAsImV4cCI6MjA4MDQ4MjgzMH0.7puo2RCr6VMNNp_lywpAqufLEGnnE3TYqAtX8zQ0X8c';
+
+const TEAMS = [
+  {id: 'lsu', name: 'LSU', url: 'https://lsusports.net/sports/sd/roster'},
+  {id: 'florida', name: 'Florida', url: 'https://floridagators.com/sports/mens-swimming-and-diving/roster'},
+  {id: 'georgia', name: 'Georgia', url: 'https://georgiadogs.com/sports/swimming-and-diving/roster'},
+  {id: 'texas-am', name: 'Texas A&M', url: 'https://12thman.com/sports/swimdive/roster'},
+  {id: 'south-carolina', name: 'South Carolina', url: 'https://gamecocksonline.com/sports/swimming/roster'},
+  {id: 'auburn', name: 'Auburn', url: 'https://auburntigers.com/sports/swimming-diving/roster'},
+  {id: 'kentucky', name: 'Kentucky', url: 'https://ukathletics.com/sports/mswim/roster'},
+];
+
+console.log('Teams configured:', TEAMS.length);
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('MESSAGE RECEIVED:', request);
+  if (request.action === 'scrapeAllTeams') {
+    console.log('STARTING SCRAPE...');
+    scrapeAllTeams();
+    sendResponse({status: 'started'});
+  }
+  return true;
+});
+
+console.log('Message listener registered');
+
+async function scrapeAllTeams() {
+  console.log('=== CSD HEADSHOT SCRAPER STARTED ===');
+  console.log('Processing ' + TEAMS.length + ' teams...');
+  
+  for (let i = 0; i < TEAMS.length; i++) {
+    const team = TEAMS[i];
+    console.log('\n[' + (i+1) + '/' + TEAMS.length + '] Processing: ' + team.name);
+    console.log('URL: ' + team.url);
+    
+    try {
+      const tab = await chrome.tabs.create({ url: team.url, active: false });
+      console.log('Tab created: ' + tab.id);
+      
+      await new Promise(resolve => {
+        const listener = (tabId, info) => {
+          if (tabId === tab.id && info.status === 'complete') {
+            chrome.tabs.onUpdated.removeListener(listener);
+            console.log('Page loaded, waiting 3s for JavaScript...');
+            setTimeout(resolve, 3000);
+          }
+        };
+        chrome.tabs.onUpdated.addListener(listener);
+      });
+      
+      console.log('Extracting athlete data...');
+      const [result] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: extractAthletes
+      });
+      
+      const data = result.result || { athletes: [], debug: {} };
+      const athletes = data.athletes || [];
+      const debug = data.debug || {};
+      
+      console.log('DEBUG INFO:');
+      console.log('  Page title:', debug.title);
+      console.log('  Ready state:', debug.readyState);
+      console.log('  .sidearm-roster-player:', debug.sidearmCount);
+      console.log('  .roster-card:', debug.rosterCardCount);
+      console.log('  li[class*="roster"]:', debug.liRosterCount);
+      console.log('  .s-person-card:', debug.personCardCount);
+      console.log('  a[href*="/roster/player/"]:', debug.ukCardCount);
+      console.log('  .sqs-row:', debug.lsuCardCount);
+      console.log('  Sample classes:', debug.sampleClasses);
+      
+      const withPhotos = athletes.filter(a => a.headshot).length;
+      console.log('Found ' + athletes.length + ' athletes, ' + withPhotos + ' with photos');
+      
+      if (athletes.length > 0) {
+        console.log('Sample athletes:');
+        for (let j = 0; j < Math.min(3, athletes.length); j++) {
+          const a = athletes[j];
+          console.log('  - ' + a.name + ': ' + (a.headshot ? 'HAS PHOTO' : 'NO PHOTO'));
+        }
+      }
+      
+      console.log('Updating database...');
+      let updated = 0;
+      
+      for (const athlete of athletes) {
+        if (athlete.headshot) {
+          try {
+            const url = SUPABASE_URL + '/rest/v1/csd_athletes?team_id=eq.' + team.id + '&name=eq.' + encodeURIComponent(athlete.name);
+            console.log('Updating: ' + athlete.name);
+            
+            const response = await fetch(url, {
+              method: 'PATCH',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify({ headshot: athlete.headshot })
+            });
+            
+            if (response.ok) {
+              updated++;
+              console.log('  SUCCESS: ' + athlete.name);
+            } else {
+              const text = await response.text();
+              console.error('  FAILED: ' + athlete.name + ' - Status: ' + response.status);
+              console.error('  Response: ' + text);
+            }
+          } catch (err) {
+            console.error('  ERROR: ' + athlete.name + ' - ' + err.message);
+          }
+        }
+      }
+      
+      console.log('Updated ' + updated + '/' + withPhotos + ' athletes in database');
+      await chrome.tabs.remove(tab.id);
+      console.log('Tab closed');
+      await new Promise(r => setTimeout(r, 2000));
+    } catch (err) {
+      console.error('ERROR processing ' + team.name + ':', err);
+    }
+  }
+  console.log('\n=== SCRAPING COMPLETE ===');
+}
+
+function extractAthletes() {
+  const debug = {
+    title: document.title,
+    readyState: document.readyState,
+    sidearmCount: document.querySelectorAll('.sidearm-roster-player').length,
+    rosterCardCount: document.querySelectorAll('.roster-card').length,
+    liRosterCount: document.querySelectorAll('li[class*="roster"]').length,
+    personCardCount: document.querySelectorAll('.s-person-card').length,
+    ukCardCount: document.querySelectorAll('a[href*="/roster/player/"]').length,
+    lsuCardCount: document.querySelectorAll('.sqs-row').length,
+    sampleClasses: ''
+  };
+  
+  const elements = document.querySelectorAll('[class]');
+  const classes = Array.from(elements).slice(0, 20).map(el => el.className).join(' ');
+  debug.sampleClasses = classes.substring(0, 200);
+  
+  const athletes = [];
+  
+  // KENTUCKY: Special handler for UK Athletics
+  if (window.location.hostname === 'ukathletics.com') {
+    const ukCards = document.querySelectorAll('a[href*="/roster/player/"]');
+    ukCards.forEach((card) => {
+      const nameEl = card.querySelector('h3');
+      const imgEl = card.querySelector('img');
+      
+      if (nameEl) {
+        const name = nameEl.textContent.trim();
+        let headshot = null;
+        
+        if (imgEl) {
+          headshot = imgEl.src || imgEl.dataset.src;
+          const bad = ['placeholder', 'default', 'silhouette', 'avatar', 'blank'];
+          if (headshot && bad.some(b => headshot.toLowerCase().includes(b))) {
+            headshot = null;
+          }
+        }
+        
+        if (name) {
+          athletes.push({ name, headshot });
+        }
+      }
+    });
+    return { athletes, debug };
+  }
+  
+  // LSU: Special handler - uses similar structure to UK
+  if (window.location.hostname === 'lsusports.net') {
+    // Try roster player links (found 82 in debug)
+    let lsuCards = document.querySelectorAll('a[href*="/roster/player/"]');
+    
+    // Fallback to other selectors if needed
+    if (lsuCards.length === 0) {
+      lsuCards = document.querySelectorAll('.sqs-row, .roster-player, .athlete-card');
+    }
+    
+    lsuCards.forEach((card) => {
+      const nameEl = card.querySelector('h3, h4, h2, p strong, .name, [class*="name"]');
+      const imgEl = card.querySelector('img');
+      
+      if (nameEl) {
+        const name = nameEl.textContent.trim();
+        let headshot = null;
+        
+        if (imgEl) {
+          headshot = imgEl.src || imgEl.dataset.src || imgEl.getAttribute('data-src') || imgEl.getAttribute('data-image');
+          const bad = ['placeholder', 'default', 'silhouette', 'avatar', 'blank'];
+          if (headshot && bad.some(b => headshot.toLowerCase().includes(b))) {
+            headshot = null;
+          }
+        }
+        
+        if (name && headshot) {
+          athletes.push({ name, headshot });
+        }
+      }
+    });
+    return { athletes, debug };
+  }
+  
+  // Try standard selectors for other sites
+  let players = document.querySelectorAll('.sidearm-roster-player');
+  if (players.length === 0) {
+    players = document.querySelectorAll('.roster-card');
+  }
+  if (players.length === 0) {
+    players = document.querySelectorAll('li[class*="roster"]');
+  }
+  if (players.length === 0) {
+    players = document.querySelectorAll('.s-person-card');
+  }
+  
+  players.forEach((player) => {
+    const nameEl = player.querySelector('.sidearm-roster-player-name') ||
+                  player.querySelector('[class*="name"]') ||
+                  player.querySelector('h3, h4, h2') ||
+                  player.querySelector('a');
+    
+    if (nameEl) {
+      const name = nameEl.textContent.trim();
+      const imgEl = player.querySelector('img');
+      let headshot = null;
+      
+      if (imgEl) {
+        headshot = imgEl.src || imgEl.dataset.src || imgEl.getAttribute('data-src');
+        const bad = ['placeholder', 'default', 'silhouette', 'avatar', 'blank'];
+        if (headshot && bad.some(b => headshot.toLowerCase().includes(b))) {
+          headshot = null;
+        }
+      }
+      
+      if (name) {
+        athletes.push({ name, headshot });
+      }
+    }
+  });
+  
+  return { athletes, debug };
+}

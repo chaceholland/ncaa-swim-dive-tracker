@@ -102,6 +102,8 @@ export default function Home() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [meetCount, setMeetCount] = useState(0);
+  const [swimmerCount, setSwimmerCount] = useState(0);
+  const [diverCount, setDiverCount] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("rosters");
   const [selectedConference, setSelectedConference] =
     useState<Conference>("all");
@@ -125,17 +127,16 @@ export default function Home() {
   const [showFavoritesDrawer, setShowFavoritesDrawer] = useState(false);
   const [showIssuesModal, setShowIssuesModal] = useState(false);
 
-  // Restore scroll position on mount
+  // Restore scroll position after teams have loaded
   useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem("homeScrollPosition");
-    if (savedScrollPosition) {
-      // Use setTimeout to ensure DOM is ready
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition, 10));
-        sessionStorage.removeItem("homeScrollPosition");
-      }, 100);
-    }
-  }, []);
+    if (loading) return;
+    const saved = sessionStorage.getItem("homeScrollPosition");
+    if (!saved) return;
+    sessionStorage.removeItem("homeScrollPosition");
+    requestAnimationFrame(() => {
+      window.scrollTo(0, parseInt(saved, 10));
+    });
+  }, [loading]);
 
   // Fetch teams and featured athletes from Supabase
   useEffect(() => {
@@ -160,6 +161,20 @@ export default function Home() {
           .from("swim_meets")
           .select("id", { count: "exact", head: true });
         setMeetCount(count ?? 0);
+
+        // Fetch swimmer/diver counts
+        const [{ count: swimmers }, { count: divers }] = await Promise.all([
+          supabase
+            .from("athletes")
+            .select("id", { count: "exact", head: true })
+            .eq("athlete_type", "swimmer"),
+          supabase
+            .from("athletes")
+            .select("id", { count: "exact", head: true })
+            .eq("athlete_type", "diver"),
+        ]);
+        setSwimmerCount(swimmers ?? 0);
+        setDiverCount(divers ?? 0);
       } catch (error) {
         console.error("Error fetching teams:", error);
       } finally {
@@ -221,8 +236,8 @@ export default function Home() {
       },
       athleteType: {
         all: teams.reduce((sum, t) => sum + t.athlete_count, 0),
-        swimmers: 0, // Would need athlete data
-        divers: 0, // Would need athlete data
+        swimmers: swimmerCount,
+        divers: diverCount,
       },
     };
 
@@ -238,7 +253,7 @@ export default function Home() {
     });
 
     return counts;
-  }, [teams]);
+  }, [teams, swimmerCount, diverCount]);
 
   // Handle favorite toggle
   const handleFavoriteToggle = (teamId: string) => {
@@ -621,6 +636,13 @@ function DataQualityModal({
                             src={athlete.photo_url}
                             alt={athlete.name}
                             className="w-full h-full object-cover"
+                          />
+                        ) : team?.logo_url || team?.logo_fallback_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={team.logo_url || team.logo_fallback_url!}
+                            alt={team?.name || athlete.name}
+                            className="w-full h-full object-contain p-1"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-slate-400">

@@ -34,7 +34,9 @@ interface Performer {
   timeMs: number;
   timeFormatted: string;
   photoUrl: string | null;
+  teamLogoUrl: string | null;
   profileId: string | null; // UUID from web app athletes table
+  teamUuid: string | null; // UUID from web app teams table
 }
 
 export default function TopPerformersStrip() {
@@ -52,12 +54,29 @@ export default function TopPerformersStrip() {
       try {
         const supabase = createClient();
 
-        // 1. Fetch all results for this event, ordered by time ascending
+        // 1. Fetch all male athlete IDs from swim_athletes (men-only table)
+        const { data: maleAthletes } = await supabase
+          .from("swim_athletes")
+          .select("swimcloud_id")
+          .not("swimcloud_id", "is", null);
+
+        const maleAthleteIds = new Set(
+          (maleAthletes ?? []).map((a) => a.swimcloud_id as string),
+        );
+
+        if (maleAthleteIds.size === 0) {
+          setHasData(false);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Fetch results for this event, filtered to male athletes only
         const { data: results, error } = await supabase
           .from("swim_individual_results")
           .select("athlete_id, final_time_ms")
           .eq("event_id", selectedEvent)
           .not("final_time_ms", "is", null)
+          .in("athlete_id", Array.from(maleAthleteIds))
           .order("final_time_ms", { ascending: true });
 
         if (error || !results || results.length === 0) {
@@ -66,7 +85,7 @@ export default function TopPerformersStrip() {
           return;
         }
 
-        // 2. Deduplicate to best time per athlete
+        // 3. Deduplicate to best time per athlete
         const bestByAthlete = new Map<string, number>();
         for (const row of results) {
           const existing = bestByAthlete.get(row.athlete_id);
@@ -88,7 +107,7 @@ export default function TopPerformersStrip() {
 
         const athleteIds = top10.map(([id]) => id);
 
-        // 3. Look up athlete info from swim_athletes
+        // 4. Look up athlete info from swim_athletes
         const { data: swimAthletes } = await supabase
           .from("swim_athletes")
           .select("swimcloud_id, name, team_id")
@@ -107,7 +126,7 @@ export default function TopPerformersStrip() {
           }
         }
 
-        // 4. Convert team_id slug to display name (e.g. "ohio-state" → "Ohio State")
+        // 5. Convert team_id slug to display name (e.g. "ohio-state" → "Ohio State")
         function slugToDisplayName(slug: string): string {
           return slug
             .split("-")
@@ -115,7 +134,7 @@ export default function TopPerformersStrip() {
             .join(" ");
         }
 
-        // 5. Try to match to web app athletes table for photos and profile IDs
+        // 6. Try to match to web app athletes table for photos and profile IDs
         // Match by name — best-effort
         const athleteNames = (swimAthletes ?? [])
           .map((a) => a.name)
@@ -126,21 +145,48 @@ export default function TopPerformersStrip() {
           .eq("is_archived", false)
           .in("name", athleteNames);
 
+        // Fetch team logos for the matched athletes
+        const webAthleteTeamIds = [
+          ...new Set(
+            (webAthletes ?? []).map((wa) => wa.team_id).filter(Boolean),
+          ),
+        ];
+        const teamLogoMap = new Map<string, string>();
+        if (webAthleteTeamIds.length > 0) {
+          const { data: teamLogos } = await supabase
+            .from("teams")
+            .select("id, logo_url, logo_fallback_url")
+            .in("id", webAthleteTeamIds);
+          for (const t of teamLogos ?? []) {
+            const logo = t.logo_url || t.logo_fallback_url;
+            if (logo) teamLogoMap.set(t.id, logo);
+          }
+        }
+
         // Build a name -> web athlete lookup (take first match)
         const webAthleteByName = new Map<
           string,
-          { photoUrl: string | null; id: string }
+          {
+            photoUrl: string | null;
+            id: string;
+            teamLogoUrl: string | null;
+            teamUuid: string | null;
+          }
         >();
         for (const wa of webAthletes ?? []) {
           if (!webAthleteByName.has(wa.name)) {
             webAthleteByName.set(wa.name, {
               photoUrl: wa.photo_url ?? null,
               id: wa.id,
+              teamLogoUrl: wa.team_id
+                ? (teamLogoMap.get(wa.team_id) ?? null)
+                : null,
+              teamUuid: wa.team_id ?? null,
             });
           }
         }
 
-        // 6. Build performer list
+        // 7. Build performer list
         const performerList: Performer[] = top10.map(
           ([athleteId, timeMs], idx) => {
             const swimAthlete = swimAthleteMap.get(athleteId);
@@ -158,7 +204,9 @@ export default function TopPerformersStrip() {
               timeMs,
               timeFormatted: formatSwimTime(timeMs),
               photoUrl: webAthlete?.photoUrl ?? null,
+              teamLogoUrl: webAthlete?.teamLogoUrl ?? null,
               profileId: webAthlete?.id ?? null,
+              teamUuid: webAthlete?.teamUuid ?? null,
             };
           },
         );
@@ -279,8 +327,16 @@ export default function TopPerformersStrip() {
 }
 
 function PerformerCard({ performer }: { performer: Performer }) {
-  const { rank, name, teamName, timeFormatted, photoUrl, profileId } =
-    performer;
+  const {
+    rank,
+    name,
+    teamName,
+    timeFormatted,
+    photoUrl,
+    teamLogoUrl,
+    profileId,
+    teamUuid,
+  } = performer;
 
   const isGold = rank === 1;
   const isSilver = rank === 2;
@@ -322,6 +378,13 @@ function PerformerCard({ performer }: { performer: Performer }) {
             alt={name}
             className="w-full h-full object-cover object-top"
           />
+        ) : teamLogoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={teamLogoUrl}
+            alt={name}
+            className="w-full h-full object-contain p-1 bg-white"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xl font-bold text-white/60">
             {name.charAt(0)}
@@ -351,10 +414,17 @@ function PerformerCard({ performer }: { performer: Performer }) {
     </div>
   );
 
-  // If we have a profile ID, wrap in a link
-  if (profileId) {
+  // Link to team page with athlete highlighted
+  if (teamUuid && profileId) {
     return (
-      <a href={`/athlete/${profileId}`} className="block">
+      <a href={`/team/${teamUuid}?highlight=${profileId}`} className="block">
+        {cardContent}
+      </a>
+    );
+  }
+  if (teamUuid) {
+    return (
+      <a href={`/team/${teamUuid}`} className="block">
         {cardContent}
       </a>
     );

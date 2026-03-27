@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { Athlete, Team } from '@/lib/supabase/types';
-import { useIntersectionObserver } from '@/lib/hooks/useIntersectionObserver';
-import { getTeamGradient, getContrastColor, cn } from '@/lib/utils';
-import { isExternalUrl } from '@/lib/image-utils';
-import Badge from '@/components/ui/Badge'
-import Button from '@/components/ui/Button';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { Athlete, Team } from "@/lib/supabase/types";
+import { useIntersectionObserver } from "@/lib/hooks/useIntersectionObserver";
+import { getTeamGradient, getContrastColor, cn } from "@/lib/utils";
+import { isExternalUrl } from "@/lib/image-utils";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 
 interface AthleteCardProps {
   athlete: Athlete;
@@ -25,18 +25,18 @@ interface AthleteCardProps {
  * @returns Initials (1-2 uppercase letters)
  */
 function getAthleteInitials(name: string): string {
-  if (!name || typeof name !== 'string') {
-    return 'A';
+  if (!name || typeof name !== "string") {
+    return "A";
   }
 
   const cleaned = name.trim();
 
   if (cleaned.length === 0) {
-    return 'A';
+    return "A";
   }
 
   // Split by spaces and filter out empty strings
-  const words = cleaned.split(/\s+/).filter(word => word.length > 0);
+  const words = cleaned.split(/\s+/).filter((word) => word.length > 0);
 
   if (words.length === 0) {
     return cleaned.charAt(0).toUpperCase();
@@ -116,11 +116,7 @@ export default function AthleteCard({
     <motion.div
       ref={ref as React.RefObject<HTMLDivElement>}
       initial={{ opacity: 0, y: 20 }}
-      animate={
-        isIntersecting
-          ? { opacity: 1, y: 0 }
-          : { opacity: 0, y: 20 }
-      }
+      animate={isIntersecting ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       transition={{
         duration: 0.5,
         delay: staggerDelay,
@@ -149,23 +145,25 @@ export default function AthleteCard({
           <motion.button
             onClick={handleFavoriteClick}
             className={cn(
-              'absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-colors z-10',
-              'focus:outline-none focus:ring-2 focus:ring-white/50',
+              "absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-colors z-10",
+              "focus:outline-none focus:ring-2 focus:ring-white/50",
               isFavorite
-                ? 'bg-white/20 text-yellow-400'
-                : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                ? "bg-white/20 text-yellow-400"
+                : "bg-white/10 text-white/60 hover:bg-white/20 hover:text-white",
             )}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
           >
             <motion.div
               animate={isFavorite ? { rotate: [0, -10, 10, -10, 0] } : {}}
               transition={{ duration: 0.5 }}
             >
               <svg
-                className={cn('w-5 h-5', isFavorite && 'fill-current')}
-                fill={isFavorite ? 'currentColor' : 'none'}
+                className={cn("w-5 h-5", isFavorite && "fill-current")}
+                fill={isFavorite ? "currentColor" : "none"}
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
@@ -188,9 +186,9 @@ export default function AthleteCard({
               <div className="relative w-44 aspect-[3/4]">
                 <div
                   className={cn(
-                    'absolute inset-0 rounded-lg bg-white ring-4 ring-white',
-                    'flex items-center justify-center',
-                    imageLoading && 'animate-pulse'
+                    "absolute inset-0 rounded-lg bg-white ring-4 ring-white",
+                    "flex items-center justify-center",
+                    imageLoading && "animate-pulse",
                   )}
                 >
                   {imageLoading && (
@@ -205,9 +203,9 @@ export default function AthleteCard({
                     alt={`${athlete.name}`}
                     referrerPolicy="no-referrer"
                     className={cn(
-                      'absolute inset-0 w-full h-full rounded-lg ring-4 ring-white',
-                      'object-cover transition-opacity duration-300',
-                      imageLoading ? 'opacity-0' : 'opacity-100'
+                      "absolute inset-0 w-full h-full rounded-lg ring-4 ring-white",
+                      "object-cover transition-opacity duration-300",
+                      imageLoading ? "opacity-0" : "opacity-100",
                     )}
                     onError={handleImageError}
                     onLoad={handleImageLoad}
@@ -218,9 +216,9 @@ export default function AthleteCard({
                     alt={`${athlete.name}`}
                     fill
                     className={cn(
-                      'relative rounded-lg ring-4 ring-white',
-                      'object-cover transition-opacity duration-300',
-                      imageLoading ? 'opacity-0' : 'opacity-100'
+                      "relative rounded-lg ring-4 ring-white",
+                      "object-cover transition-opacity duration-300",
+                      imageLoading ? "opacity-0" : "opacity-100",
                     )}
                     onError={handleImageError}
                     onLoad={handleImageLoad}
@@ -229,19 +227,28 @@ export default function AthleteCard({
                 )}
               </div>
             ) : (
-              // Initials fallback
+              // Logo fallback
               <div
                 className={cn(
-                  'w-44 aspect-[3/4] rounded-lg flex items-center justify-center',
-                  'ring-4 ring-white',
-                  'font-bold text-5xl'
+                  "w-44 aspect-[3/4] rounded-lg flex items-center justify-center",
+                  "ring-4 ring-white bg-white p-4",
                 )}
-                style={{
-                  backgroundColor: `#${team.primary_color}`,
-                  color: contrastColor,
-                }}
               >
-                {initials}
+                {team.logo_url || team.logo_fallback_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={team.logo_url || team.logo_fallback_url!}
+                    alt={team.name}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span
+                    className="font-bold text-5xl"
+                    style={{ color: `#${team.primary_color}` }}
+                  >
+                    {initials}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -299,12 +306,16 @@ export default function AthleteCard({
               className="w-full"
               style={{
                 background: gradient,
-                color: 'white',
+                color: "white",
               }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (athlete.profile_url) {
-                  window.open(athlete.profile_url, '_blank', 'noopener,noreferrer');
+                  window.open(
+                    athlete.profile_url,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
                 }
               }}
               disabled={!athlete.profile_url}

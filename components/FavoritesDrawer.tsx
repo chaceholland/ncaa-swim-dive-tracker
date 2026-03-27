@@ -181,6 +181,13 @@ export default function FavoritesDrawer({
                                   className="object-cover"
                                 />
                               )
+                            ) : athlete.team_logo_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={athlete.team_logo_url}
+                                alt={athlete.name}
+                                className="w-full h-full object-contain p-1 bg-white"
+                              />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <span className="text-slate-500 text-sm font-semibold">

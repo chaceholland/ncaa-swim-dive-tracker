@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 // Generate or retrieve device ID for anonymous favorites
 function getDeviceId(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === "undefined") return "";
 
-  let deviceId = localStorage.getItem('device_id');
+  let deviceId = localStorage.getItem("device_id");
   if (!deviceId) {
     deviceId = crypto.randomUUID();
-    localStorage.setItem('device_id', deviceId);
+    localStorage.setItem("device_id", deviceId);
   }
   return deviceId;
 }
@@ -21,6 +21,7 @@ export interface AthleteFavorite {
   class_year?: string;
   photo_url?: string;
   hometown?: string;
+  team_logo_url?: string;
 }
 
 export interface TeamFavorite {
@@ -31,7 +32,9 @@ export interface TeamFavorite {
 }
 
 export function useFavorites() {
-  const [athleteFavorites, setAthleteFavorites] = useState<AthleteFavorite[]>([]);
+  const [athleteFavorites, setAthleteFavorites] = useState<AthleteFavorite[]>(
+    [],
+  );
   const [teamFavorites, setTeamFavorites] = useState<TeamFavorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [deviceId] = useState(() => getDeviceId());
@@ -45,42 +48,61 @@ export function useFavorites() {
 
       // Load athlete favorites
       const { data: athleteData } = await supabase
-        .from('csd_anon_favorites')
-        .select('athlete_id, name, team_id, athlete_type, year_class, headshot, hometown')
-        .eq('device_id', deviceId);
+        .from("csd_anon_favorites")
+        .select(
+          "athlete_id, name, team_id, athlete_type, year_class, headshot, hometown",
+        )
+        .eq("device_id", deviceId);
 
       if (athleteData) {
+        // Fetch team logos for all teams referenced by favorites
+        const teamIds = [
+          ...new Set(athleteData.map((f) => f.team_id).filter(Boolean)),
+        ];
+        const teamLogoMap = new Map<string, string>();
+        if (teamIds.length > 0) {
+          const { data: teamsData } = await supabase
+            .from("teams")
+            .select("id, logo_url, logo_fallback_url")
+            .in("id", teamIds);
+          for (const t of teamsData ?? []) {
+            const logo = t.logo_url || t.logo_fallback_url;
+            if (logo) teamLogoMap.set(t.id, logo);
+          }
+        }
+
         setAthleteFavorites(
           athleteData.map((f) => ({
             id: f.athlete_id,
-            name: f.name || '',
-            team_id: f.team_id || '',
+            name: f.name || "",
+            team_id: f.team_id || "",
             athlete_type: f.athlete_type || undefined,
             class_year: f.year_class || undefined,
             photo_url: f.headshot || undefined,
             hometown: f.hometown || undefined,
-          }))
+            team_logo_url: f.team_id ? teamLogoMap.get(f.team_id) : undefined,
+          })),
         );
       }
 
       // Load team favorites
       const { data: teamData } = await supabase
-        .from('csd_anon_team_favorites')
-        .select('team_id, name, conference, logo')
-        .eq('device_id', deviceId);
+        .from("csd_anon_team_favorites")
+        .select("team_id, name, conference, logo")
+        .eq("device_id", deviceId);
 
       if (teamData) {
         setTeamFavorites(
           teamData.map((f) => ({
             id: f.team_id,
-            name: f.name || '',
+            name: f.name || "",
             conference: f.conference || undefined,
             logo_url: f.logo || undefined,
-          }))
+          })),
         );
       }
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      console.error("Error loading favorites:", error);
     } finally {
       setLoading(false);
     }
@@ -97,7 +119,7 @@ export function useFavorites() {
       if (!deviceId) return;
 
       try {
-        const { error } = await supabase.from('csd_anon_favorites').insert({
+        const { error } = await supabase.from("csd_anon_favorites").insert({
           device_id: deviceId,
           athlete_id: athlete.id,
           name: athlete.name,
@@ -111,13 +133,13 @@ export function useFavorites() {
         if (!error) {
           setAthleteFavorites((prev) => [...prev, athlete]);
         } else {
-          console.error('Error adding athlete favorite:', error);
+          console.error("Error adding athlete favorite:", error);
         }
       } catch (error) {
-        console.error('Error adding athlete favorite:', error);
+        console.error("Error adding athlete favorite:", error);
       }
     },
-    [deviceId]
+    [deviceId],
   );
 
   // Remove athlete favorite
@@ -127,21 +149,21 @@ export function useFavorites() {
 
       try {
         const { error } = await supabase
-          .from('csd_anon_favorites')
+          .from("csd_anon_favorites")
           .delete()
-          .eq('device_id', deviceId)
-          .eq('athlete_id', athleteId);
+          .eq("device_id", deviceId)
+          .eq("athlete_id", athleteId);
 
         if (!error) {
           setAthleteFavorites((prev) => prev.filter((f) => f.id !== athleteId));
         } else {
-          console.error('Error removing athlete favorite:', error);
+          console.error("Error removing athlete favorite:", error);
         }
       } catch (error) {
-        console.error('Error removing athlete favorite:', error);
+        console.error("Error removing athlete favorite:", error);
       }
     },
-    [deviceId]
+    [deviceId],
   );
 
   // Toggle athlete favorite
@@ -154,7 +176,7 @@ export function useFavorites() {
         await addAthleteFavorite(athlete);
       }
     },
-    [athleteFavorites, addAthleteFavorite, removeAthleteFavorite]
+    [athleteFavorites, addAthleteFavorite, removeAthleteFavorite],
   );
 
   // Add team favorite
@@ -163,24 +185,26 @@ export function useFavorites() {
       if (!deviceId) return;
 
       try {
-        const { error } = await supabase.from('csd_anon_team_favorites').insert({
-          device_id: deviceId,
-          team_id: team.id,
-          name: team.name,
-          conference: team.conference,
-          logo: team.logo_url,
-        });
+        const { error } = await supabase
+          .from("csd_anon_team_favorites")
+          .insert({
+            device_id: deviceId,
+            team_id: team.id,
+            name: team.name,
+            conference: team.conference,
+            logo: team.logo_url,
+          });
 
         if (!error) {
           setTeamFavorites((prev) => [...prev, team]);
         } else {
-          console.error('Error adding team favorite:', error);
+          console.error("Error adding team favorite:", error);
         }
       } catch (error) {
-        console.error('Error adding team favorite:', error);
+        console.error("Error adding team favorite:", error);
       }
     },
-    [deviceId]
+    [deviceId],
   );
 
   // Remove team favorite
@@ -190,21 +214,21 @@ export function useFavorites() {
 
       try {
         const { error } = await supabase
-          .from('csd_anon_team_favorites')
+          .from("csd_anon_team_favorites")
           .delete()
-          .eq('device_id', deviceId)
-          .eq('team_id', teamId);
+          .eq("device_id", deviceId)
+          .eq("team_id", teamId);
 
         if (!error) {
           setTeamFavorites((prev) => prev.filter((f) => f.id !== teamId));
         } else {
-          console.error('Error removing team favorite:', error);
+          console.error("Error removing team favorite:", error);
         }
       } catch (error) {
-        console.error('Error removing team favorite:', error);
+        console.error("Error removing team favorite:", error);
       }
     },
-    [deviceId]
+    [deviceId],
   );
 
   // Toggle team favorite
@@ -217,7 +241,7 @@ export function useFavorites() {
         await addTeamFavorite(team);
       }
     },
-    [teamFavorites, addTeamFavorite, removeTeamFavorite]
+    [teamFavorites, addTeamFavorite, removeTeamFavorite],
   );
 
   // Check if athlete is favorite
@@ -225,7 +249,7 @@ export function useFavorites() {
     (athleteId: string) => {
       return athleteFavorites.some((f) => f.id === athleteId);
     },
-    [athleteFavorites]
+    [athleteFavorites],
   );
 
   // Check if team is favorite
@@ -233,7 +257,7 @@ export function useFavorites() {
     (teamId: string) => {
       return teamFavorites.some((f) => f.id === teamId);
     },
-    [teamFavorites]
+    [teamFavorites],
   );
 
   return {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Team, Athlete } from "@/lib/supabase/types";
 import { getTeamGradient, getTeamInitials } from "@/lib/utils";
@@ -10,6 +10,28 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { isExternalUrl } from "@/lib/image-utils";
+
+// Teams whose headshots look better centered rather than top-aligned
+const TEAM_PHOTO_CENTER = new Set([
+  "Columbia",
+  "Brown",
+  "Cornell",
+  "Penn",
+  "Dartmouth",
+  "Army",
+  "Princeton",
+]);
+
+// Teams that need slight zoom-out (object-contain + padding)
+const TEAM_PHOTO_PADDING: Record<string, string> = {
+  Princeton: "0.75rem",
+  Brown: "0.75rem",
+  Cornell: "0.75rem",
+  Penn: "0.75rem",
+  Dartmouth: "0.75rem",
+  Army: "1rem",
+  "George Washington": "0.75rem",
+};
 
 type DataQualityIssue = {
   athleteId: string;
@@ -20,6 +42,9 @@ type DataQualityIssue = {
 export default function TeamRosterPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+  const highlightRef = useRef<HTMLDivElement | null>(null);
   const [team, setTeam] = useState<Team | null>(null);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +91,18 @@ export default function TeamRosterPage() {
 
     fetchTeamAndAthletes();
   }, [params.id]);
+
+  // Scroll to highlighted athlete after load
+  useEffect(() => {
+    if (!highlightId || !highlightRef.current) return;
+    const timer = setTimeout(() => {
+      highlightRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [highlightId, athletes]);
 
   // Convert arrays to Sets for faster lookups
   const favoriteAthleteIdsSet = useMemo(() => {
@@ -179,6 +216,17 @@ export default function TeamRosterPage() {
   }
 
   const gradient = getTeamGradient(team.primary_color, team.secondary_color);
+  const teamPhotoPadding = TEAM_PHOTO_PADDING[team.name];
+  const photoImgStyle: React.CSSProperties = teamPhotoPadding
+    ? {
+        objectFit: "contain",
+        objectPosition: "center",
+        padding: teamPhotoPadding,
+      }
+    : {
+        objectFit: "cover",
+        objectPosition: TEAM_PHOTO_CENTER.has(team.name) ? "center" : "top",
+      };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -193,10 +241,10 @@ export default function TeamRosterPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <button
             onClick={() => router.back()}
-            className="absolute top-6 left-6 text-white/80 hover:text-white flex items-center gap-2 transition-colors"
+            className="absolute top-6 left-6 text-white flex items-center gap-2 transition-all bg-black/20 hover:bg-black/35 px-4 py-2.5 rounded-xl font-semibold text-base backdrop-blur-sm"
           >
             <svg
-              className="w-5 h-5"
+              className="w-6 h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -204,7 +252,7 @@ export default function TeamRosterPage() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M15 19l-7-7 7-7"
               />
             </svg>
@@ -342,13 +390,25 @@ export default function TeamRosterPage() {
               const hasIssue = dataQualityIssuesMap.has(athlete.id);
               const issueData = dataQualityIssuesMap.get(athlete.id);
 
+              const isHighlighted = highlightId === athlete.id;
+
               return (
                 <motion.div
                   key={athlete.id}
+                  ref={isHighlighted ? highlightRef : null}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer"
+                  whileHover={{ scale: 1.3 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: index * 0.05,
+                    scale: { duration: 0.25, ease: "easeOut", delay: 0 },
+                  }}
+                  className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer relative z-0 hover:z-10 ${
+                    isHighlighted
+                      ? "ring-4 ring-cyan-400 ring-offset-2 shadow-cyan-200 shadow-xl animate-pulse-ring"
+                      : ""
+                  }`}
                   onClick={() => {
                     if (athlete.profile_url) {
                       window.open(
@@ -360,7 +420,7 @@ export default function TeamRosterPage() {
                   }}
                 >
                   {/* Athlete Photo */}
-                  <div className="relative h-64 bg-slate-100 group-hover:brightness-95 transition-all">
+                  <div className="relative h-64 bg-slate-100 overflow-hidden">
                     {athlete.photo_url ? (
                       isExternalUrl(athlete.photo_url) ? (
                         // Raw img for all external URLs to avoid hotlink/CDN issues
@@ -370,14 +430,16 @@ export default function TeamRosterPage() {
                           alt={athlete.name}
                           loading={index < 8 ? undefined : "lazy"}
                           referrerPolicy="no-referrer"
-                          className={`w-full h-full object-cover ${team.name === "Columbia" ? "object-[center_80%]" : "object-top"}`}
+                          className="w-full h-full transition-transform duration-300 ease-in-out "
+                          style={photoImgStyle}
                         />
                       ) : (
                         <Image
                           src={athlete.photo_url}
                           alt={athlete.name}
                           fill
-                          className={`object-cover ${team.name === "Columbia" ? "object-[center_80%]" : "object-top"}`}
+                          className="transition-transform duration-300 ease-in-out "
+                          style={photoImgStyle}
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                           quality={95}
                           priority={index < 8}
@@ -531,6 +593,29 @@ export default function TeamRosterPage() {
             })}
           </div>
         )}
+
+        {/* Bottom back link */}
+        <div className="mt-10 pt-6 border-t border-slate-200">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-slate-300 px-5 py-3 rounded-xl font-semibold text-base transition-all shadow-sm"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back to Teams
+          </button>
+        </div>
       </div>
     </div>
   );

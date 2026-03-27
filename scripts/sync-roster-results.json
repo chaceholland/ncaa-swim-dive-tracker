@@ -1,0 +1,453 @@
+{
+  "timestamp": "2026-03-05T07:51:56.456Z",
+  "summary": {
+    "totalAdded": 183,
+    "totalArchived": 37,
+    "totalUnchanged": 1229,
+    "failedCount": 2
+  },
+  "results": [
+    {
+      "team": "Alabama",
+      "method": "sidearm-table",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Auburn",
+      "method": "roster-players-group",
+      "scraped": 22,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 22
+    },
+    {
+      "team": "Florida",
+      "method": "sidearm-table",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Kentucky",
+      "method": "kentucky-wp",
+      "scraped": 23,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 23
+    },
+    {
+      "team": "LSU",
+      "method": "lsu-wp",
+      "scraped": 41,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 41
+    },
+    {
+      "team": "Missouri",
+      "method": "sidearm-table",
+      "scraped": 22,
+      "added": 0,
+      "reactivated": 22,
+      "archived": 0,
+      "unchanged": 0
+    },
+    {
+      "team": "Tennessee",
+      "method": "sidearm-table",
+      "scraped": 22,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 22
+    },
+    {
+      "team": "Texas",
+      "method": "sidearm-table",
+      "scraped": 32,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 6,
+      "unchanged": 32
+    },
+    {
+      "team": "Texas A&M",
+      "method": "sidearm-table",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Indiana",
+      "method": "sidearm-table",
+      "scraped": 32,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 14,
+      "unchanged": 32
+    },
+    {
+      "team": "Michigan",
+      "method": "sidearm-table",
+      "scraped": 30,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 30
+    },
+    {
+      "team": "Minnesota",
+      "method": "sidearm-table",
+      "scraped": 26,
+      "added": 0,
+      "reactivated": 26,
+      "archived": 0,
+      "unchanged": 0
+    },
+    {
+      "team": "Northwestern",
+      "method": "sidearm-table",
+      "scraped": 27,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 8,
+      "unchanged": 27
+    },
+    {
+      "team": "Ohio State",
+      "method": "sidearm-table",
+      "scraped": 30,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 30
+    },
+    {
+      "team": "Penn State",
+      "method": "roster-players-group",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Purdue",
+      "method": "roster-players-group",
+      "scraped": 35,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 35
+    },
+    {
+      "team": "USC",
+      "method": "sidearm-table",
+      "scraped": 31,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 31
+    },
+    {
+      "team": "Wisconsin",
+      "method": "sidearm-table",
+      "scraped": 25,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 9,
+      "unchanged": 25
+    },
+    {
+      "team": "Duke",
+      "method": "sidearm-table",
+      "scraped": 23,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 23
+    },
+    {
+      "team": "Florida State",
+      "method": "sidearm-table",
+      "scraped": 31,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 31
+    },
+    {
+      "team": "Georgia Tech",
+      "method": "table-fallback",
+      "scraped": 16,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 16
+    },
+    {
+      "team": "Louisville",
+      "method": "sidearm-table",
+      "scraped": 29,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 29
+    },
+    {
+      "team": "NC State",
+      "method": "sidearm-table",
+      "scraped": 27,
+      "added": 14,
+      "reactivated": 13,
+      "archived": 0,
+      "unchanged": 0
+    },
+    {
+      "team": "North Carolina",
+      "method": "sidearm-table",
+      "scraped": 29,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 29
+    },
+    {
+      "team": "Notre Dame",
+      "method": "notre-dame",
+      "scraped": 27,
+      "added": 8,
+      "reactivated": 18,
+      "archived": 0,
+      "unchanged": 1
+    },
+    {
+      "team": "Pittsburgh",
+      "method": "sidearm-table",
+      "scraped": 29,
+      "added": 12,
+      "reactivated": 17,
+      "archived": 0,
+      "unchanged": 0
+    },
+    {
+      "team": "Stanford",
+      "method": "roster-players-group",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Virginia",
+      "method": "roster-players-group",
+      "scraped": 22,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 22
+    },
+    {
+      "team": "Virginia Tech",
+      "method": "roster-players-group",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Arizona",
+      "method": "old-sidearm",
+      "scraped": 30,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 30
+    },
+    {
+      "team": "Arizona State",
+      "method": "roster-players-group",
+      "scraped": 29,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 29
+    },
+    {
+      "team": "TCU",
+      "method": "sidearm-table",
+      "scraped": 30,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 30
+    },
+    {
+      "team": "Utah",
+      "method": "sidearm-table",
+      "scraped": 30,
+      "added": 0,
+      "reactivated": 1,
+      "archived": 0,
+      "unchanged": 29
+    },
+    {
+      "team": "West Virginia",
+      "method": "sidearm-table",
+      "scraped": 34,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 34
+    },
+    {
+      "team": "Brown",
+      "method": "sidearm-table",
+      "scraped": 32,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 32
+    },
+    {
+      "team": "Columbia",
+      "method": "sidearm-table",
+      "scraped": 36,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 36
+    },
+    {
+      "team": "Cornell",
+      "method": "old-sidearm",
+      "scraped": 30,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 30
+    },
+    {
+      "team": "Dartmouth",
+      "method": "sidearm-table",
+      "scraped": 27,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 27
+    },
+    {
+      "team": "Harvard",
+      "method": "old-sidearm",
+      "scraped": 26,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 26
+    },
+    {
+      "team": "Penn",
+      "method": "old-sidearm",
+      "scraped": 28,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 28
+    },
+    {
+      "team": "Princeton",
+      "method": "sidearm-table",
+      "scraped": 36,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 36
+    },
+    {
+      "team": "Yale",
+      "method": "old-sidearm",
+      "scraped": 31,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 31
+    },
+    {
+      "team": "Army",
+      "method": "sidearm-table",
+      "scraped": 32,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 32
+    },
+    {
+      "team": "Navy",
+      "method": "table-fallback",
+      "scraped": 52,
+      "added": 2,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 50
+    },
+    {
+      "team": "George Washington",
+      "method": "sidearm-table",
+      "scraped": 24,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 24
+    },
+    {
+      "team": "Southern Illinois",
+      "method": "sidearm-table",
+      "scraped": 50,
+      "added": 26,
+      "reactivated": 24,
+      "archived": 0,
+      "unchanged": 0
+    },
+    {
+      "team": "Towson",
+      "method": "old-sidearm",
+      "scraped": 29,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 29
+    },
+    {
+      "team": "UNLV",
+      "method": "old-sidearm",
+      "scraped": 51,
+      "added": 0,
+      "reactivated": 0,
+      "archived": 0,
+      "unchanged": 51
+    }
+  ],
+  "failedTeams": [
+    {
+      "team": "Akron",
+      "reason": "not in DB"
+    },
+    {
+      "team": "San Diego State",
+      "reason": "not in DB"
+    }
+  ]
+}
