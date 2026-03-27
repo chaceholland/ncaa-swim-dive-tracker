@@ -625,6 +625,32 @@ async function main(): Promise<void> {
     console.log(`Total Skipped: ${totalSkipped}`);
     console.log("-".repeat(60));
     console.log(`Completed at ${new Date().toISOString()}`);
+
+    // Log sync result to Supabase
+    const hasErrors = results.some((r) => r.error);
+    try {
+      const { error: syncLogError } = await supabase
+        .from("swim_sync_log")
+        .insert({
+          sync_type: "update_missing_data",
+          source: "update-missing-data",
+          records_count: totalAdded + totalUpdated,
+          status: hasErrors ? "error" : "success",
+          error_message: hasErrors
+            ? results
+                .filter((r) => r.error)
+                .map((r) => `${r.team}: ${r.error}`)
+                .join("; ")
+            : null,
+        });
+      if (syncLogError) {
+        console.error("⚠️  Failed to write sync log:", syncLogError.message);
+      } else {
+        console.log("📝 Sync log written to swim_sync_log");
+      }
+    } catch (err) {
+      console.error("⚠️  Failed to write sync log:", (err as Error).message);
+    }
   } finally {
     if (browser) {
       await browser.close();
@@ -632,7 +658,18 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error("Fatal error:", error);
+  try {
+    await supabase.from("swim_sync_log").insert({
+      sync_type: "update_missing_data",
+      source: "update-missing-data",
+      records_count: 0,
+      status: "error",
+      error_message: error.message || String(error),
+    });
+  } catch (_) {
+    /* ignore logging failures on fatal error */
+  }
   process.exit(1);
 });
