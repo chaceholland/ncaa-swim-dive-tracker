@@ -1,119 +1,71 @@
 import type { NextConfig } from "next";
 
+/**
+ * Non-.edu college athletics domains that host team logos and athlete headshots.
+ * Add new domains here when onboarding teams whose sites aren't on .edu domains.
+ */
+const athleticsDomains = [
+  "auburntigers.com",
+  "calbears.com",
+  "cornellbigred.com",
+  "fightingirish.com",
+  "gamecocksonline.com",
+  "gocrimson.com",
+  "goheels.com",
+  "gopsusports.com",
+  "gostanford.com",
+  "hokiesports.com",
+  "lsusports.net",
+  "navysports.com",
+  "pennathletics.com",
+  "ramblinwreck.com",
+  "smumustangs.com",
+  "towsontigers.com",
+  "unlvrebels.com",
+  "virginiasports.com",
+  "yalebulldogs.com",
+];
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**.edu",
-      },
+      // Supabase storage — team logos & athlete headshots
       {
         protocol: "https",
         hostname: "dtnozcqkuzhjmjvsfjqk.supabase.co",
       },
+      // University athletics sites on .edu domains
+      {
+        protocol: "https",
+        hostname: "**.edu",
+      },
+      // SideArm Sports CDN — powers most NCAA athletics sites
       {
         protocol: "https",
         hostname: "images.sidearmdev.com",
       },
+      // CloudFront CDNs used by various athletics sites
       {
         protocol: "https",
-        hostname: "auburntigers.com",
+        hostname: "**.cloudfront.net",
       },
+      // Google Cloud Storage
       {
         protocol: "https",
         hostname: "storage.googleapis.com",
       },
-      {
-        protocol: "https",
-        hostname: "gamecocksonline.com",
-      },
-      {
-        protocol: "https",
-        hostname: "lsusports.net",
-      },
-      {
-        protocol: "https",
-        hostname: "calbears.com",
-      },
-      {
-        protocol: "https",
-        hostname: "smumustangs.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gostanford.com",
-      },
-      {
-        protocol: "https",
-        hostname: "d11rxijfksshz7.cloudfront.net",
-      },
-      {
-        protocol: "https",
-        hostname: "dxbhsrqyrr690.cloudfront.net",
-      },
-      {
-        protocol: "https",
-        hostname: "cornellbigred.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gopsusports.com",
-      },
-      {
-        protocol: "https",
-        hostname: "pennathletics.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gocrimson.com",
-      },
-      {
-        protocol: "https",
-        hostname: "d3mojdi32uv7q.cloudfront.net",
-      },
-      {
-        protocol: "https",
-        hostname: "yalebulldogs.com",
-      },
-      {
-        protocol: "https",
-        hostname: "goheels.com",
-      },
-      {
-        protocol: "https",
-        hostname: "navysports.com",
-      },
-      {
-        protocol: "https",
-        hostname: "unlvrebels.com",
-      },
-      {
-        protocol: "https",
-        hostname: "towsontigers.com",
-      },
-      {
-        protocol: "https",
-        hostname: "fightingirish.com",
-      },
-      {
-        protocol: "https",
-        hostname: "virginiasports.com",
-      },
-      {
-        protocol: "https",
-        hostname: "hokiesports.com",
-      },
-      {
-        protocol: "https",
-        hostname: "ramblinwreck.com",
-      },
+      // Non-.edu athletics domains (generated from array above)
+      ...athleticsDomains.map((hostname) => ({
+        protocol: "https" as const,
+        hostname,
+      })),
     ],
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
