@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+// @ts-ignore — plain JS ESM module
+import { requireInSeason } from "../_lib/seasonGuard.js";
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
@@ -356,6 +358,30 @@ async function fetchSidearmRoster(
 
 // ── Main handler ───────────────────────────────────────────────────
 export async function GET(request: Request) {
+  // Offseason guard
+  {
+    const url = new URL(request.url);
+    const pagesReq = { query: Object.fromEntries(url.searchParams.entries()) };
+    let guardResponse: NextResponse | null = null;
+    const pagesRes = {
+      status(code: number) {
+        return {
+          json(body: unknown) {
+            guardResponse = NextResponse.json(body, { status: code });
+          },
+        };
+      },
+    };
+    if (
+      await requireInSeason(pagesReq, pagesRes, {
+        slug: "swim",
+        logTable: "swim_sync_log",
+      })
+    ) {
+      return guardResponse!;
+    }
+  }
+
   // Verify Vercel Cron secret when running in production
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
