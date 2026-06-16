@@ -42,3 +42,6 @@ next-env.d.ts
 
 # playwright mcp logs
 .playwright-mcp/
+
+# generated swim dry-run artifacts
+scripts/staging/dry-run-meet-*.json
