@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 // @ts-ignore — plain JS ESM module
 import { requireInSeason } from "../_lib/seasonGuard.js";
+// @ts-ignore — plain JS ESM module (no .d.ts); soft-disabled until NTFY_TOPIC is set
+import { alert, shouldAlertWarn } from "../_lib/alert.js";
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
@@ -577,6 +579,17 @@ export async function GET(request: Request) {
       totalAthletes,
     });
 
+    const alertSummary = {
+      attempted: results.length,
+      ok: totalUpdated,
+      failed: totalFailed,
+      sidearmUnavailable: totalSidearmUnavailable,
+      athletes: totalAthletes,
+    };
+    if (shouldAlertWarn(alertSummary)) {
+      await alert("warn", alertSummary);
+    }
+
     return NextResponse.json({
       message: "Roster update complete",
       staleCount: staleTeams.length,
@@ -594,6 +607,7 @@ export async function GET(request: Request) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[api/update] Fatal error:", msg);
+    await alert("error", { message: msg });
 
     try {
       await writeSyncLog(supabase, "error", 0, msg);
