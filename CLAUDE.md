@@ -2,6 +2,8 @@
 
 _Project instructions for Claude Code. Global rules: `~/.claude/CLAUDE.md`. Deep reference: `~/claude-shared/memory/`._
 
+**Accounts (canonical — do not deviate):** GitHub **`chaceholland`** · commit & push as `Chace Holland <chace_holland@yahoo.com>` · Vercel team **`chace-holland-4133's projects`**. Never commit as gmail / `mchaceholland-hub`, and never set a local `user.email` override (this repo previously had one — it's the bug that blocked deploys). Verify: `git config user.email` + `gh auth status`. (Full detail: `~/.claude/CLAUDE.md`.)
+
 **Purpose:** NCAA D1 **Men's** Swimming & Diving — athletes, individual results, teams (~52 D1 teams). Repo: `chaceholland/ncaa-swim-dive-tracker`.
 
 **Stack:** Next.js 16.1.6 + React 19. Vercel + Cron. Supabase P1 `dtnozcqkuzhjmjvsfjqk`.
