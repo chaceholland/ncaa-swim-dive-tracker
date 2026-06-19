@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { DataFreshnessFooter } from "@/components/shared";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -51,6 +52,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="antialiased">
         {children}
+        <footer className="flex justify-center py-4">
+          <DataFreshnessFooter />
+        </footer>
       </body>
     </html>
   );
