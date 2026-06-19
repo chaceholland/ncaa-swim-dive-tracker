@@ -331,7 +331,7 @@ export default function Home() {
   }, [teamFavorites]);
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-900">
       {/* Navigation */}
       <Navigation
         favoritesCount={favoritesCount}

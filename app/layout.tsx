@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { DataFreshnessFooter } from "@/components/shared";
+import { ThemeProvider, DataFreshnessFooter } from "@/components/shared";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,12 +49,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className="antialiased">
-        {children}
-        <footer className="flex justify-center py-4">
-          <DataFreshnessFooter />
-        </footer>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className="bg-slate-900 text-slate-100 antialiased">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          {children}
+          <footer className="flex justify-center py-4">
+            <DataFreshnessFooter />
+          </footer>
+        </ThemeProvider>
       </body>
     </html>
   );

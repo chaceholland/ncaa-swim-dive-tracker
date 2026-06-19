@@ -63,13 +63,13 @@ export default function ConferenceSection({
   const conferenceGradient = getConferenceGradient(conferenceCode);
 
   return (
-    <section
-      className="w-full py-20"
-      style={{
-        background: conferenceGradient,
-      }}
-    >
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative w-full py-16 bg-slate-900">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.08]"
+        style={{ background: conferenceGradient }}
+        aria-hidden="true"
+      />
+      <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
           ref={ref as React.RefObject<HTMLDivElement>}

@@ -57,7 +57,7 @@ function Pill({ label, count, active, onClick }: PillProps) {
         'font-medium text-sm whitespace-nowrap',
         active
           ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30'
-          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
+          : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600'
       )}
     >
       <span>{label}</span>
@@ -89,11 +89,11 @@ export default function FilterPills({
   onAthleteTypeChange,
 }: FilterPillsProps) {
   return (
-    <div className="space-y-4 px-4 sm:px-6 lg:px-8 py-6 bg-slate-50">
+    <div className="space-y-4 px-4 sm:px-6 lg:px-8 py-6 bg-slate-900">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* View Mode Filter */}
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
             View Mode
           </h3>
           <div className="flex gap-2">
@@ -114,7 +114,7 @@ export default function FilterPills({
 
         {/* Conference Filter */}
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
             Conference
           </h3>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
@@ -165,7 +165,7 @@ export default function FilterPills({
 
         {/* Athlete Type Filter */}
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
             Athlete Type
           </h3>
           <div className="flex gap-2">
