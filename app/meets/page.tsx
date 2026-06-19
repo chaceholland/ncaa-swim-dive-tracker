@@ -31,6 +31,9 @@ function CourseTypeBadge({ courseType }: { courseType: string }) {
 
 export default async function MeetsPage() {
   const meets: SwimMeet[] = await getAllMeets({ limit: 100 });
+  // D1 (swim analog of the "Today" strip): feature the most-recent meet.
+  // getAllMeets returns date_start DESC, so meets[0] is the latest.
+  const latest = meets[0];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -62,6 +65,74 @@ export default async function MeetsPage() {
 
       {/* Meet list */}
       <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Latest meet highlight (D1) */}
+        {latest && (
+          <div className="mb-8">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              Latest meet
+            </h2>
+            <Link
+              href={`/meets/${latest.id}`}
+              className="block bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl px-6 py-5 text-white shadow-lg hover:shadow-xl transition-all group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 flex-shrink-0 text-center">
+                  {latest.date_start ? (
+                    <>
+                      <div className="text-xs text-blue-100 uppercase tracking-wide">
+                        {new Date(latest.date_start).toLocaleDateString("en-US", {
+                          month: "short",
+                        })}
+                      </div>
+                      <div className="text-3xl font-bold leading-none">
+                        {new Date(latest.date_start).getDate()}
+                      </div>
+                      <div className="text-xs text-blue-100">
+                        {new Date(latest.date_start).getFullYear()}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-blue-100 font-medium">TBD</div>
+                  )}
+                </div>
+                <div className="w-px h-14 bg-white/30 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-lg truncate">{latest.name}</p>
+                  <div className="flex items-center gap-2 mt-1 text-blue-100 text-sm">
+                    {latest.location && (
+                      <span className="truncate">{latest.location}</span>
+                    )}
+                    {latest.date_end && latest.date_end !== latest.date_start && (
+                      <>
+                        {latest.location && (
+                          <span className="text-blue-200">·</span>
+                        )}
+                        <span>Ends {formatDate(latest.date_end)}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white flex-shrink-0">
+                  {latest.course_type}
+                </span>
+                <svg
+                  className="w-5 h-5 text-white/80 group-hover:translate-x-0.5 transition-transform flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </Link>
+          </div>
+        )}
+
         {meets.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg">No meets found</p>
@@ -71,7 +142,7 @@ export default async function MeetsPage() {
           </div>
         ) : (
           <div className="grid gap-3">
-            {meets.map((meet) => (
+            {meets.slice(1).map((meet) => (
               <Link
                 key={meet.id}
                 href={`/meets/${meet.id}`}
