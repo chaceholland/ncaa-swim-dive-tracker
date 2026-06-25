@@ -4,6 +4,9 @@ import type {
   RecentMeet,
   SwimMeet,
   MeetDetailResult,
+  MeetResultRow,
+  MeetByTeamResult,
+  MeetTeamGroup,
 } from "@/lib/supabase/types";
 
 // Some teams use a non-standard slug in swim_teams/swim_athletes
@@ -223,9 +226,16 @@ export async function getAllMeets(
   return data as SwimMeet[];
 }
 
-export async function getMeetResults(
-  meetId: number,
-): Promise<MeetDetailResult | null> {
+function isDiveEvent(eventId: string): boolean {
+  return /-diving$/.test(eventId);
+}
+
+// Internal: load + decorate every row of a meet exactly once. Both byEvent and
+// byTeam views share this loader.
+async function loadMeetRows(meetId: number): Promise<{
+  meet: SwimMeet;
+  rows: (MeetResultRow & { eventId: string; eventName: string })[];
+} | null> {
   const supabase = createClient();
 
   const { data: meet, error: meetError } = await supabase
@@ -240,22 +250,17 @@ export async function getMeetResults(
 
   const { data: results } = await supabase
     .from("swim_individual_results")
-    .select("event_id, athlete_id, final_time_ms, final_place")
+    .select("event_id, athlete_id, final_time_ms, final_place, final_score")
     .eq("meet_id", String(meetId))
     .order("event_id")
-    .order("final_time_ms", { ascending: true });
+    .order("final_place", { ascending: true, nullsFirst: false });
 
   if (!results || results.length === 0) {
-    return {
-      meet: meet as SwimMeet,
-      eventGroups: [],
-    };
+    return { meet: meet as SwimMeet, rows: [] };
   }
 
-  // Collect unique athlete IDs
   const athleteIds = Array.from(new Set(results.map((r) => r.athlete_id)));
 
-  // Fetch athlete names from swim_athletes
   const { data: athletes } = await supabase
     .from("swim_athletes")
     .select("swimcloud_id, name, team_id")
@@ -268,30 +273,46 @@ export async function getMeetResults(
     }
   }
 
-  // Group by event_id
-  const eventGroupMap = new Map<
-    string,
-    {
-      place: number | null;
-      athleteName: string;
-      teamId: string;
-      timeMs: number;
-      timeFormatted: string;
-    }[]
-  >();
-
-  for (const row of results) {
-    if (!eventGroupMap.has(row.event_id)) {
-      eventGroupMap.set(row.event_id, []);
-    }
-    const athlete = athleteMap.get(row.athlete_id);
-    eventGroupMap.get(row.event_id)!.push({
-      place: row.final_place,
-      athleteName: athlete?.name ?? `Athlete #${row.athlete_id}`,
-      teamId: athlete?.teamId ?? "",
-      timeMs: row.final_time_ms,
-      timeFormatted: formatSwimTime(row.final_time_ms),
+  const rows: (MeetResultRow & { eventId: string; eventName: string })[] =
+    results.map((r) => {
+      const athlete = athleteMap.get(r.athlete_id);
+      const isDive = isDiveEvent(r.event_id);
+      return {
+        eventId: r.event_id,
+        eventName: formatEventName(r.event_id),
+        eventType: isDive ? "dive" : "swim",
+        place: r.final_place,
+        athleteName: athlete?.name ?? `Athlete #${r.athlete_id}`,
+        athleteId: r.athlete_id,
+        teamId: athlete?.teamId ?? "",
+        timeMs: r.final_time_ms ?? 0,
+        timeFormatted: r.final_time_ms ? formatSwimTime(r.final_time_ms) : "",
+        finalScore:
+          // final_score column added by Pass 1 staging cutover; column may be
+          // null on legacy rows or absent if the cutover hasn't run yet.
+          typeof (r as { final_score?: number | null }).final_score === "number"
+            ? ((r as { final_score?: number | null }).final_score as number)
+            : null,
+      };
     });
+
+  return { meet: meet as SwimMeet, rows };
+}
+
+export async function getMeetResults(
+  meetId: number,
+): Promise<MeetDetailResult | null> {
+  const loaded = await loadMeetRows(meetId);
+  if (!loaded) return null;
+  const { meet, rows } = loaded;
+
+  // Group by event_id
+  const eventGroupMap = new Map<string, typeof rows>();
+  for (const row of rows) {
+    if (!eventGroupMap.has(row.eventId)) {
+      eventGroupMap.set(row.eventId, []);
+    }
+    eventGroupMap.get(row.eventId)!.push(row);
   }
 
   const eventGroups = Array.from(eventGroupMap.entries())
@@ -299,11 +320,46 @@ export async function getMeetResults(
     .map(([eventId, eventResults]) => ({
       eventId,
       eventName: formatEventName(eventId),
+      eventType: isDiveEvent(eventId) ? ("dive" as const) : ("swim" as const),
       results: eventResults,
     }));
 
-  return {
-    meet: meet as SwimMeet,
-    eventGroups,
-  };
+  return { meet, eventGroups };
+}
+
+export async function getMeetResultsByTeam(
+  meetId: number,
+): Promise<MeetByTeamResult | null> {
+  const loaded = await loadMeetRows(meetId);
+  if (!loaded) return null;
+  const { meet, rows } = loaded;
+
+  // Group by team_id
+  const teamMap = new Map<string, typeof rows>();
+  for (const row of rows) {
+    const key = row.teamId || "__unaffiliated";
+    if (!teamMap.has(key)) teamMap.set(key, []);
+    teamMap.get(key)!.push(row);
+  }
+
+  const teamGroups: MeetTeamGroup[] = Array.from(teamMap.entries())
+    .map(([teamId, teamRows]) => ({
+      teamId,
+      teamName:
+        teamId === "__unaffiliated"
+          ? "Unaffiliated"
+          : teamId
+              .split("-")
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" "),
+      athleteCount: new Set(teamRows.map((r) => r.athleteId)).size,
+      rows: teamRows.sort((a, b) =>
+        a.eventId === b.eventId
+          ? (a.place ?? 999) - (b.place ?? 999)
+          : a.eventId.localeCompare(b.eventId),
+      ),
+    }))
+    .sort((a, b) => b.athleteCount - a.athleteCount);
+
+  return { meet, teamGroups };
 }

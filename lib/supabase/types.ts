@@ -66,17 +66,37 @@ export interface RecentMeet {
   times: string[];
 }
 
+export interface MeetResultRow {
+  place: number | null;
+  athleteName: string;
+  athleteId: string;
+  teamId: string;
+  // For swim events: timeMs is the time in ms, finalScore null.
+  // For dive events: timeMs is 0, finalScore is the judge score.
+  timeMs: number;
+  timeFormatted: string;
+  finalScore: number | null;
+  eventType: "swim" | "dive";
+}
+
 export interface MeetDetailResult {
   meet: SwimMeet;
   eventGroups: {
     eventId: string;
     eventName: string;
-    results: {
-      place: number | null;
-      athleteName: string;
-      teamId: string;
-      timeMs: number;
-      timeFormatted: string;
-    }[];
+    eventType: "swim" | "dive";
+    results: MeetResultRow[];
   }[];
+}
+
+export interface MeetTeamGroup {
+  teamId: string;
+  teamName: string;
+  athleteCount: number;
+  rows: (MeetResultRow & { eventId: string; eventName: string })[];
+}
+
+export interface MeetByTeamResult {
+  meet: SwimMeet;
+  teamGroups: MeetTeamGroup[];
 }
