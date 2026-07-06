@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider, DataFreshnessFooter } from "@/components/shared";
+import { ThemeProvider, DataFreshnessFooter, SeasonBanner } from "@/components/shared";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -52,6 +52,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="bg-slate-900 text-slate-100 antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <SeasonBanner
+            inSeasonMonths={[10, 11, 12, 1, 2, 3]}
+            sportLabel="NCAA swim & dive"
+            resumeNote="Season resumes in October."
+          />
           {children}
           <footer className="flex justify-center py-4">
             <DataFreshnessFooter />
