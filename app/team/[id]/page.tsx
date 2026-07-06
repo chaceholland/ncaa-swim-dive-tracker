@@ -731,11 +731,11 @@ function IssueButton({
         mounted &&
         createPortal(
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={() => setShowMenu(false)}
           >
             <div
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md max-h-[88vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
