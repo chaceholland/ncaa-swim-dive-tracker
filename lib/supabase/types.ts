@@ -22,6 +22,10 @@ export interface Athlete {
   hometown: string | null;
   profile_url: string | null;
   is_archived: boolean;
+  // Join key into the swim results ecosystem (swim_individual_results.athlete_id).
+  // Backfilled from swim_athletes as part of the athletes-as-canonical
+  // consolidation; null for rows with no matching swim roster entry.
+  swimcloud_id?: string | null;
   created_at: string;
   updated_at: string;
 }

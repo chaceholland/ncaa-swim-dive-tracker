@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { formatSwimTime, formatEventName } from "@/lib/swimcloud";
+import { formatSwimTime, formatEventName, teamNameToSlug } from "@/lib/swimcloud";
 import { isExternalUrl } from "@/lib/image-utils";
 
 // Featured events with hyphenated IDs matching the DB
@@ -54,15 +54,28 @@ export default function TopPerformersStrip() {
       try {
         const supabase = createClient();
 
-        // 1. Fetch all male athlete IDs from swim_athletes (men-only table)
-        const { data: maleAthletes } = await supabase
-          .from("swim_athletes")
-          .select("swimcloud_id")
-          .not("swimcloud_id", "is", null);
+        // 1. Universe of tracked (men's) swimcloud_ids used to scope results.
+        //    Primary source is the canonical `athletes` table (now carries
+        //    swimcloud_id); union with swim_athletes as a fallback so roster
+        //    rows not yet backfilled into athletes stay eligible. See
+        //    scripts/staging/CONSOLIDATION-EXECUTION-NOTES.md.
+        const [{ data: canonUniverse }, { data: legacyUniverse }] =
+          await Promise.all([
+            supabase
+              .from("athletes")
+              .select("swimcloud_id")
+              .not("swimcloud_id", "is", null),
+            supabase
+              .from("swim_athletes")
+              .select("swimcloud_id")
+              .not("swimcloud_id", "is", null),
+          ]);
 
-        const maleAthleteIds = new Set(
-          (maleAthletes ?? []).map((a) => a.swimcloud_id as string),
-        );
+        const maleAthleteIds = new Set<string>();
+        for (const a of canonUniverse ?? [])
+          if (a.swimcloud_id) maleAthleteIds.add(a.swimcloud_id as string);
+        for (const a of legacyUniverse ?? [])
+          if (a.swimcloud_id) maleAthleteIds.add(a.swimcloud_id as string);
 
         if (maleAthleteIds.size === 0) {
           setHasData(false);
@@ -70,7 +83,7 @@ export default function TopPerformersStrip() {
           return;
         }
 
-        // 2. Fetch results for this event, filtered to male athletes only
+        // 2. Fetch results for this event, filtered to the tracked universe.
         const { data: results, error } = await supabase
           .from("swim_individual_results")
           .select("athlete_id, final_time_ms")
@@ -107,26 +120,8 @@ export default function TopPerformersStrip() {
 
         const athleteIds = top10.map(([id]) => id);
 
-        // 4. Look up athlete info from swim_athletes
-        const { data: swimAthletes } = await supabase
-          .from("swim_athletes")
-          .select("swimcloud_id, name, team_id")
-          .in("swimcloud_id", athleteIds);
-
-        const swimAthleteMap = new Map<
-          string,
-          { name: string; teamId: string }
-        >();
-        for (const a of swimAthletes ?? []) {
-          if (a.swimcloud_id) {
-            swimAthleteMap.set(a.swimcloud_id, {
-              name: a.name,
-              teamId: a.team_id,
-            });
-          }
-        }
-
-        // 5. Convert team_id slug to display name (e.g. "ohio-state" → "Ohio State")
+        // Slug -> display name (e.g. "ohio-state" → "Ohio State"), used only for
+        // swim_athletes-fallback rows whose team is a slug.
         function slugToDisplayName(slug: string): string {
           return slug
             .split("-")
@@ -134,79 +129,152 @@ export default function TopPerformersStrip() {
             .join(" ");
         }
 
-        // 6. Try to match to web app athletes table for photos and profile IDs
-        // Match by name — best-effort
-        const athleteNames = (swimAthletes ?? [])
-          .map((a) => a.name)
-          .filter(Boolean);
-        const { data: webAthletes } = await supabase
-          .from("athletes")
-          .select("id, name, photo_url, team_id")
-          .eq("is_archived", false)
-          .in("name", athleteNames);
+        type Resolved = {
+          name: string;
+          teamId: string;
+          teamName: string;
+          photoUrl: string | null;
+          profileId: string | null;
+          teamUuid: string | null;
+          teamLogoUrl: string | null;
+        };
+        const resolved = new Map<string, Resolved>();
 
-        // Fetch team logos for the matched athletes
-        const webAthleteTeamIds = [
+        // 4. Primary resolve: canonical athletes give name, team, photo, profile
+        //    id and team uuid in one lookup — no name-matching needed.
+        const { data: canonAthletes } = await supabase
+          .from("athletes")
+          .select("id, swimcloud_id, name, photo_url, team_id")
+          .in("swimcloud_id", athleteIds)
+          .not("swimcloud_id", "is", null);
+
+        const canonTeamUuids = [
           ...new Set(
-            (webAthletes ?? []).map((wa) => wa.team_id).filter(Boolean),
+            (canonAthletes ?? []).map((a) => a.team_id).filter(Boolean),
           ),
         ];
-        const teamLogoMap = new Map<string, string>();
-        if (webAthleteTeamIds.length > 0) {
-          const { data: teamLogos } = await supabase
-            .from("teams")
-            .select("id, logo_url, logo_fallback_url")
-            .in("id", webAthleteTeamIds);
-          for (const t of teamLogos ?? []) {
-            const logo = t.logo_url || t.logo_fallback_url;
-            if (logo) teamLogoMap.set(t.id, logo);
-          }
-        }
-
-        // Build a name -> web athlete lookup (take first match)
-        const webAthleteByName = new Map<
+        const teamById = new Map<
           string,
-          {
-            photoUrl: string | null;
-            id: string;
-            teamLogoUrl: string | null;
-            teamUuid: string | null;
-          }
+          { name: string; logo: string | null }
         >();
-        for (const wa of webAthletes ?? []) {
-          if (!webAthleteByName.has(wa.name)) {
-            webAthleteByName.set(wa.name, {
-              photoUrl: wa.photo_url ?? null,
-              id: wa.id,
-              teamLogoUrl: wa.team_id
-                ? (teamLogoMap.get(wa.team_id) ?? null)
-                : null,
-              teamUuid: wa.team_id ?? null,
+        if (canonTeamUuids.length > 0) {
+          const { data: teamRows } = await supabase
+            .from("teams")
+            .select("id, name, logo_url, logo_fallback_url")
+            .in("id", canonTeamUuids);
+          for (const t of teamRows ?? []) {
+            teamById.set(t.id, {
+              name: t.name,
+              logo: t.logo_url || t.logo_fallback_url || null,
             });
           }
         }
 
-        // 7. Build performer list
+        for (const a of canonAthletes ?? []) {
+          if (!a.swimcloud_id) continue;
+          const t = a.team_id ? teamById.get(a.team_id) : undefined;
+          resolved.set(a.swimcloud_id, {
+            name: a.name,
+            teamId: t ? teamNameToSlug(t.name) : "",
+            teamName: t?.name ?? "",
+            photoUrl: a.photo_url ?? null,
+            profileId: a.id ?? null,
+            teamUuid: a.team_id ?? null,
+            teamLogoUrl: t?.logo ?? null,
+          });
+        }
+
+        // 5. Fallback: swim_athletes for top-10 ids not yet in athletes (the
+        //    ~40 roster rows on swim-only teams). Name/team come from
+        //    swim_athletes; photos + profile ids via the retained name-match
+        //    bridge to athletes (best-effort). Do NOT remove this bridge until
+        //    those rows are imported — see CONSOLIDATION-EXECUTION-NOTES.md.
+        const unresolvedIds = athleteIds.filter((id) => !resolved.has(id));
+        if (unresolvedIds.length > 0) {
+          const { data: legacyAthletes } = await supabase
+            .from("swim_athletes")
+            .select("swimcloud_id, name, team_id")
+            .in("swimcloud_id", unresolvedIds);
+          const legacyRows = legacyAthletes ?? [];
+
+          const legacyNames = legacyRows.map((a) => a.name).filter(Boolean);
+          const bridge = new Map<
+            string,
+            {
+              photoUrl: string | null;
+              id: string;
+              teamUuid: string | null;
+              teamLogoUrl: string | null;
+            }
+          >();
+          if (legacyNames.length > 0) {
+            const { data: webAthletes } = await supabase
+              .from("athletes")
+              .select("id, name, photo_url, team_id")
+              .eq("is_archived", false)
+              .in("name", legacyNames);
+
+            const bridgeTeamUuids = [
+              ...new Set(
+                (webAthletes ?? []).map((w) => w.team_id).filter(Boolean),
+              ),
+            ];
+            const bridgeLogo = new Map<string, string>();
+            if (bridgeTeamUuids.length > 0) {
+              const { data: teamLogos } = await supabase
+                .from("teams")
+                .select("id, logo_url, logo_fallback_url")
+                .in("id", bridgeTeamUuids);
+              for (const t of teamLogos ?? []) {
+                const logo = t.logo_url || t.logo_fallback_url;
+                if (logo) bridgeLogo.set(t.id, logo);
+              }
+            }
+            for (const w of webAthletes ?? []) {
+              if (!bridge.has(w.name)) {
+                bridge.set(w.name, {
+                  photoUrl: w.photo_url ?? null,
+                  id: w.id,
+                  teamUuid: w.team_id ?? null,
+                  teamLogoUrl: w.team_id
+                    ? (bridgeLogo.get(w.team_id) ?? null)
+                    : null,
+                });
+              }
+            }
+          }
+
+          for (const a of legacyRows) {
+            if (!a.swimcloud_id || resolved.has(a.swimcloud_id)) continue;
+            const b = bridge.get(a.name);
+            resolved.set(a.swimcloud_id, {
+              name: a.name,
+              teamId: a.team_id ?? "",
+              teamName: a.team_id ? slugToDisplayName(a.team_id) : "",
+              photoUrl: b?.photoUrl ?? null,
+              profileId: b?.id ?? null,
+              teamUuid: b?.teamUuid ?? null,
+              teamLogoUrl: b?.teamLogoUrl ?? null,
+            });
+          }
+        }
+
+        // 6. Build performer list (order follows the top-10 ranking).
         const performerList: Performer[] = top10.map(
           ([athleteId, timeMs], idx) => {
-            const swimAthlete = swimAthleteMap.get(athleteId);
-            const name = swimAthlete?.name ?? `Athlete #${athleteId}`;
-            const teamId = swimAthlete?.teamId ?? "";
-            const teamName = teamId ? slugToDisplayName(teamId) : "";
-            const webAthlete = webAthleteByName.get(name);
-
+            const r = resolved.get(athleteId);
             return {
               rank: idx + 1,
               athleteId,
-              name,
-              teamId,
-              teamName,
+              name: r?.name ?? `Athlete #${athleteId}`,
+              teamId: r?.teamId ?? "",
+              teamName: r?.teamName ?? "",
               timeMs,
               timeFormatted: formatSwimTime(timeMs),
-              photoUrl: webAthlete?.photoUrl ?? null,
-              teamLogoUrl: webAthlete?.teamLogoUrl ?? null,
-              profileId: webAthlete?.id ?? null,
-              teamUuid: webAthlete?.teamUuid ?? null,
+              photoUrl: r?.photoUrl ?? null,
+              teamLogoUrl: r?.teamLogoUrl ?? null,
+              profileId: r?.profileId ?? null,
+              teamUuid: r?.teamUuid ?? null,
             };
           },
         );

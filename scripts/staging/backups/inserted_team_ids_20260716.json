@@ -1,0 +1,206 @@
+{
+  "operation": "Additive INSERT into public.teams -- 23 swim-only teams (phase 2 of athletes-canonical consolidation), enabling import of 39 deferred swim_athletes.",
+  "project_id": "dtnozcqkuzhjmjvsfjqk",
+  "target_table": "teams",
+  "source_table": "swim_teams",
+  "date": "2026-07-16",
+  "row_count": 23,
+  "id_strategy": "New uuid4 per team (teams.id is uuid; swim_teams.id is a text slug retained in rows[] for traceability).",
+  "column_mapping": {
+    "id": "generated uuid4",
+    "name": "swim_teams.name",
+    "conference": "swim_teams.conference mapped to canonical teams code (acc/big-12/patriot kept as-is; all other swim confs bucketed to 'other', matching the existing 53-team convention)",
+    "conference_display_name": "full conference name (NOT NULL, no default -- supplied)",
+    "primary_color / secondary_color / athlete_count / created_at / updated_at": "teams column defaults"
+  },
+  "note": "Home page (app/page.tsx) groups by teams.conference code and filters athlete_count>0; these teams appear once the 39 phase-2 athletes are inserted (athletes_count_trigger bumps athlete_count). Home expands 53 -> 76 teams.",
+  "rollback_sql": "DELETE FROM public.teams WHERE id IN ('71a863c9-b679-4248-82a6-a93a26a62e7d','96a42f56-aa04-4036-b6ec-5f167ea7c29d','426c91a8-006d-4097-971e-1a58abc52308','ed8400cf-417f-4388-b335-973281159e2d','2f49b45b-3114-41ed-b464-88d9523d2250','c8e3a4b7-54bb-49f2-94be-edd2b92cd10a','96cef077-4cd2-4a9f-9341-95fe6ce892fe','1fca5fea-c022-4703-9622-b66fad6d9bdd','71471b15-ea51-4a6a-bdfd-2fa93056105e','4bc58ba5-09f0-44be-8510-50fea0929f3a','40d68d7f-7c66-4850-811a-ce7581efcb41','dbd646f0-fb13-4aa7-b74d-06df063a948d','8ea26813-214d-45e1-9a1d-6561027b0018','7fdca2d5-f6ac-46cc-a8ff-68f793a5b2d6','b0c062ae-a3cc-4864-9379-9e49b2fa570e','4016803e-f0cf-44e8-b062-6c45ad946a03','d554d083-e8f2-41da-a8ba-db1451895bea','7e845d97-026c-4c0f-ab67-247d9a7cfc3a','b8b2ebd5-171c-4776-be22-e996a2c73e94','526bc5e7-02f0-420f-ad83-5e138b3faf7f','bb51b376-967c-4ab1-8435-cf9a7f2067eb','b745c15f-ffb6-4986-9837-6c39289cd464','0cc064c4-3d80-4e16-ae8a-503558e46fff');  -- CASCADE (athletes_team_id_fkey ON DELETE CASCADE) also removes the 39 phase-2 athletes",
+  "inserted_ids": [
+    "71a863c9-b679-4248-82a6-a93a26a62e7d",
+    "96a42f56-aa04-4036-b6ec-5f167ea7c29d",
+    "426c91a8-006d-4097-971e-1a58abc52308",
+    "ed8400cf-417f-4388-b335-973281159e2d",
+    "2f49b45b-3114-41ed-b464-88d9523d2250",
+    "c8e3a4b7-54bb-49f2-94be-edd2b92cd10a",
+    "96cef077-4cd2-4a9f-9341-95fe6ce892fe",
+    "1fca5fea-c022-4703-9622-b66fad6d9bdd",
+    "71471b15-ea51-4a6a-bdfd-2fa93056105e",
+    "4bc58ba5-09f0-44be-8510-50fea0929f3a",
+    "40d68d7f-7c66-4850-811a-ce7581efcb41",
+    "dbd646f0-fb13-4aa7-b74d-06df063a948d",
+    "8ea26813-214d-45e1-9a1d-6561027b0018",
+    "7fdca2d5-f6ac-46cc-a8ff-68f793a5b2d6",
+    "b0c062ae-a3cc-4864-9379-9e49b2fa570e",
+    "4016803e-f0cf-44e8-b062-6c45ad946a03",
+    "d554d083-e8f2-41da-a8ba-db1451895bea",
+    "7e845d97-026c-4c0f-ab67-247d9a7cfc3a",
+    "b8b2ebd5-171c-4776-be22-e996a2c73e94",
+    "526bc5e7-02f0-420f-ad83-5e138b3faf7f",
+    "bb51b376-967c-4ab1-8435-cf9a7f2067eb",
+    "b745c15f-ffb6-4986-9837-6c39289cd464",
+    "0cc064c4-3d80-4e16-ae8a-503558e46fff"
+  ],
+  "rows": [
+    {
+      "id": "71a863c9-b679-4248-82a6-a93a26a62e7d",
+      "swim_team_id": "air-force",
+      "name": "Air Force",
+      "conference": "other",
+      "conference_display_name": "Mountain West"
+    },
+    {
+      "id": "96a42f56-aa04-4036-b6ec-5f167ea7c29d",
+      "swim_team_id": "brigham-young",
+      "name": "Brigham Young",
+      "conference": "big-12",
+      "conference_display_name": "Big 12"
+    },
+    {
+      "id": "426c91a8-006d-4097-971e-1a58abc52308",
+      "swim_team_id": "cal-state-bakersfield",
+      "name": "Cal State Bakersfield",
+      "conference": "other",
+      "conference_display_name": "Big West"
+    },
+    {
+      "id": "ed8400cf-417f-4388-b335-973281159e2d",
+      "swim_team_id": "california-baptist",
+      "name": "California Baptist",
+      "conference": "other",
+      "conference_display_name": "Western Athletic"
+    },
+    {
+      "id": "2f49b45b-3114-41ed-b464-88d9523d2250",
+      "swim_team_id": "davidson",
+      "name": "Davidson",
+      "conference": "other",
+      "conference_display_name": "Atlantic 10"
+    },
+    {
+      "id": "c8e3a4b7-54bb-49f2-94be-edd2b92cd10a",
+      "swim_team_id": "delaware",
+      "name": "Delaware",
+      "conference": "other",
+      "conference_display_name": "Conference USA"
+    },
+    {
+      "id": "96cef077-4cd2-4a9f-9341-95fe6ce892fe",
+      "swim_team_id": "drexel",
+      "name": "Drexel",
+      "conference": "other",
+      "conference_display_name": "Colonial Athletic"
+    },
+    {
+      "id": "1fca5fea-c022-4703-9622-b66fad6d9bdd",
+      "swim_team_id": "florida-atlantic",
+      "name": "Florida Atlantic",
+      "conference": "other",
+      "conference_display_name": "American Athletic"
+    },
+    {
+      "id": "71471b15-ea51-4a6a-bdfd-2fa93056105e",
+      "swim_team_id": "georgetown",
+      "name": "Georgetown",
+      "conference": "other",
+      "conference_display_name": "Big East"
+    },
+    {
+      "id": "4bc58ba5-09f0-44be-8510-50fea0929f3a",
+      "swim_team_id": "grand-canyon",
+      "name": "Grand Canyon",
+      "conference": "other",
+      "conference_display_name": "Mountain West"
+    },
+    {
+      "id": "40d68d7f-7c66-4850-811a-ce7581efcb41",
+      "swim_team_id": "hawaii",
+      "name": "Hawaii",
+      "conference": "other",
+      "conference_display_name": "Big West"
+    },
+    {
+      "id": "dbd646f0-fb13-4aa7-b74d-06df063a948d",
+      "swim_team_id": "illinois-chicago",
+      "name": "Illinois-Chicago",
+      "conference": "other",
+      "conference_display_name": "Missouri Valley"
+    },
+    {
+      "id": "8ea26813-214d-45e1-9a1d-6561027b0018",
+      "swim_team_id": "iu-indianapolis",
+      "name": "IU-Indianapolis",
+      "conference": "other",
+      "conference_display_name": "Horizon League"
+    },
+    {
+      "id": "7fdca2d5-f6ac-46cc-a8ff-68f793a5b2d6",
+      "swim_team_id": "la-salle",
+      "name": "La Salle",
+      "conference": "other",
+      "conference_display_name": "Atlantic 10"
+    },
+    {
+      "id": "b0c062ae-a3cc-4864-9379-9e49b2fa570e",
+      "swim_team_id": "loyola",
+      "name": "Loyola",
+      "conference": "patriot",
+      "conference_display_name": "Patriot League"
+    },
+    {
+      "id": "4016803e-f0cf-44e8-b062-6c45ad946a03",
+      "swim_team_id": "miami-fl",
+      "name": "Miami-FL",
+      "conference": "acc",
+      "conference_display_name": "ACC"
+    },
+    {
+      "id": "d554d083-e8f2-41da-a8ba-db1451895bea",
+      "swim_team_id": "miami-oh",
+      "name": "Miami-OH",
+      "conference": "other",
+      "conference_display_name": "Mid-American"
+    },
+    {
+      "id": "7e845d97-026c-4c0f-ab67-247d9a7cfc3a",
+      "swim_team_id": "milwaukee",
+      "name": "Milwaukee",
+      "conference": "other",
+      "conference_display_name": "Horizon League"
+    },
+    {
+      "id": "b8b2ebd5-171c-4776-be22-e996a2c73e94",
+      "swim_team_id": "missouri-state",
+      "name": "Missouri State",
+      "conference": "other",
+      "conference_display_name": "Conference USA"
+    },
+    {
+      "id": "526bc5e7-02f0-420f-ad83-5e138b3faf7f",
+      "swim_team_id": "oakland",
+      "name": "Oakland",
+      "conference": "other",
+      "conference_display_name": "Horizon League"
+    },
+    {
+      "id": "bb51b376-967c-4ab1-8435-cf9a7f2067eb",
+      "swim_team_id": "south-dakota",
+      "name": "South Dakota",
+      "conference": "other",
+      "conference_display_name": "Summit League"
+    },
+    {
+      "id": "b745c15f-ffb6-4986-9837-6c39289cd464",
+      "swim_team_id": "unc-wilmington",
+      "name": "UNC-Wilmington",
+      "conference": "other",
+      "conference_display_name": "Colonial Athletic"
+    },
+    {
+      "id": "0cc064c4-3d80-4e16-ae8a-503558e46fff",
+      "swim_team_id": "wyoming",
+      "name": "Wyoming",
+      "conference": "other",
+      "conference_display_name": "Mountain West"
+    }
+  ]
+}

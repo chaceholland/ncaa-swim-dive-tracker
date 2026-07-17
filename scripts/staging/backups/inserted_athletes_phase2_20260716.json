@@ -1,0 +1,300 @@
+{
+  "operation": "Additive INSERT into public.athletes -- 39 deferred swim-only roster rows (phase 2), on the 23 newly-added teams. Resolves 39 of the 40 net-new repoint orphans (the 40th is the Derek Colbert/Missouri swimcloud duplicate, left in place -- see notes).",
+  "project_id": "dtnozcqkuzhjmjvsfjqk",
+  "target_table": "athletes",
+  "source_table": "swim_athletes",
+  "date": "2026-07-16",
+  "row_count": 39,
+  "id_strategy": "Source swim_athletes.id preserved as athletes.id (verified 0 PK collision).",
+  "column_mapping": {
+    "id": "swim_athletes.id (preserved)",
+    "name": "swim_athletes.name",
+    "team_id": "teams.id (uuid) resolved by teams.name = swim_teams.name for the 23 phase-2 teams",
+    "photo_url": "swim_athletes.headshot_url (all NULL here)",
+    "athlete_type": "lower(swim_athletes.athlete_type) (all NULL here)",
+    "class_year": "swim_athletes.year via CASE map (all NULL here)",
+    "hometown": "swim_athletes.hometown (all NULL here)",
+    "profile_url": "swim_athletes.roster_url (all NULL here)",
+    "is_archived": "(swim_athletes.status <> 'active') -> all false (all active)",
+    "swimcloud_id": "swim_athletes.swimcloud_id",
+    "created_at/updated_at": "DB default now()"
+  },
+  "rollback_sql": "DELETE FROM public.athletes WHERE id IN ('7a413b2b-4a9b-4615-a48b-537225f729b1','7bbd30d8-fec3-400c-aa33-a1cce6a3e5fe','7639bbc6-53d0-415e-93c0-da3131cce2fd','f36b769a-52f5-426d-9e09-25027fa6eb61','cc1b528b-325b-4aaa-8723-4c2065fa6122','e8a1df19-a9c8-4767-9e96-cd045204c933','cebdf9dc-e1d0-4346-a226-c72659c22175','4c0ca48d-33b7-4a49-9126-ce65d654a57c','a2620d76-fdf7-4805-87c0-c04f3de2955d','a8196227-98d7-4b69-8723-a38c67171291','9b602944-dd56-4ee8-9e5a-36f3d2b381ef','a976c465-8220-4c5f-9aeb-16a72e28cb33','05c3b0c2-eae5-4840-91a4-5fc84500569b','39931157-b253-49c9-ad80-2806594f160c','6483d483-65c9-484d-943a-5e82f8f7e639','1bb29afd-43ff-4f21-b702-4114a220c8e2','6992baff-0154-44a4-a69c-ac6a08bf301b','2ac59c5f-2db4-48af-be34-3588c0275d0e','6fe4aa00-324f-46d9-aec9-ea571d737d5b','051bf872-0fe4-42c6-a4bb-918c2fb5b4f5','b6ae6d0d-8f08-4883-a27f-b331bec6d2e5','8ffd3d06-caee-454e-bc59-02e413a2cc2f','cc078a06-6d57-4d95-9146-7a2ac9a1cd48','7426d0b4-759a-4296-9628-f9c0945a7633','76aab292-4fd6-4616-b020-1b5dafc85085','2a15f2f5-68f3-433a-a2ae-34a0bdb4d9cc','70422e59-9be8-4d8a-a3dd-3bedf220a936','571e5ce0-7b6e-44dd-b9ca-fddd206caf04','a2fd4cb1-72bd-482f-8c82-6f10f3233777','22d1495f-4d61-4240-91dd-77023f7c3403','4900f583-6db3-4ed5-8c53-f516654275af','cb7ba765-6856-4fad-88ef-b2585e1c83be','49dcd9db-31b0-4205-8202-ab853628da66','0a169f79-4c22-47b2-ad01-59f52557bad3','091dd040-18ec-4c4c-86ce-a8b2c29b980a','637562ea-6c1e-4d1a-ac91-4ad3ede39750','bab168f8-9785-4f3c-998b-e890b791998f','ae1b058b-e9d4-4951-a85a-d2aef4d06012','044f7d9a-5ac8-4a24-ba40-1832228eb351');",
+  "inserted_ids": [
+    "7a413b2b-4a9b-4615-a48b-537225f729b1",
+    "7bbd30d8-fec3-400c-aa33-a1cce6a3e5fe",
+    "7639bbc6-53d0-415e-93c0-da3131cce2fd",
+    "f36b769a-52f5-426d-9e09-25027fa6eb61",
+    "cc1b528b-325b-4aaa-8723-4c2065fa6122",
+    "e8a1df19-a9c8-4767-9e96-cd045204c933",
+    "cebdf9dc-e1d0-4346-a226-c72659c22175",
+    "4c0ca48d-33b7-4a49-9126-ce65d654a57c",
+    "a2620d76-fdf7-4805-87c0-c04f3de2955d",
+    "a8196227-98d7-4b69-8723-a38c67171291",
+    "9b602944-dd56-4ee8-9e5a-36f3d2b381ef",
+    "a976c465-8220-4c5f-9aeb-16a72e28cb33",
+    "05c3b0c2-eae5-4840-91a4-5fc84500569b",
+    "39931157-b253-49c9-ad80-2806594f160c",
+    "6483d483-65c9-484d-943a-5e82f8f7e639",
+    "1bb29afd-43ff-4f21-b702-4114a220c8e2",
+    "6992baff-0154-44a4-a69c-ac6a08bf301b",
+    "2ac59c5f-2db4-48af-be34-3588c0275d0e",
+    "6fe4aa00-324f-46d9-aec9-ea571d737d5b",
+    "051bf872-0fe4-42c6-a4bb-918c2fb5b4f5",
+    "b6ae6d0d-8f08-4883-a27f-b331bec6d2e5",
+    "8ffd3d06-caee-454e-bc59-02e413a2cc2f",
+    "cc078a06-6d57-4d95-9146-7a2ac9a1cd48",
+    "7426d0b4-759a-4296-9628-f9c0945a7633",
+    "76aab292-4fd6-4616-b020-1b5dafc85085",
+    "2a15f2f5-68f3-433a-a2ae-34a0bdb4d9cc",
+    "70422e59-9be8-4d8a-a3dd-3bedf220a936",
+    "571e5ce0-7b6e-44dd-b9ca-fddd206caf04",
+    "a2fd4cb1-72bd-482f-8c82-6f10f3233777",
+    "22d1495f-4d61-4240-91dd-77023f7c3403",
+    "4900f583-6db3-4ed5-8c53-f516654275af",
+    "cb7ba765-6856-4fad-88ef-b2585e1c83be",
+    "49dcd9db-31b0-4205-8202-ab853628da66",
+    "0a169f79-4c22-47b2-ad01-59f52557bad3",
+    "091dd040-18ec-4c4c-86ce-a8b2c29b980a",
+    "637562ea-6c1e-4d1a-ac91-4ad3ede39750",
+    "bab168f8-9785-4f3c-998b-e890b791998f",
+    "ae1b058b-e9d4-4951-a85a-d2aef4d06012",
+    "044f7d9a-5ac8-4a24-ba40-1832228eb351"
+  ],
+  "rows": [
+    {
+      "id": "7a413b2b-4a9b-4615-a48b-537225f729b1",
+      "name": "James Winterfield",
+      "swim_team_id": "air-force",
+      "swimcloud_id": "519291"
+    },
+    {
+      "id": "7bbd30d8-fec3-400c-aa33-a1cce6a3e5fe",
+      "name": "Tanner Wilson",
+      "swim_team_id": "air-force",
+      "swimcloud_id": "1538377"
+    },
+    {
+      "id": "7639bbc6-53d0-415e-93c0-da3131cce2fd",
+      "name": "Tanner Nelson",
+      "swim_team_id": "brigham-young",
+      "swimcloud_id": "491096"
+    },
+    {
+      "id": "f36b769a-52f5-426d-9e09-25027fa6eb61",
+      "name": "Vili Sivec",
+      "swim_team_id": "cal-state-bakersfield",
+      "swimcloud_id": "1482946"
+    },
+    {
+      "id": "cc1b528b-325b-4aaa-8723-4c2065fa6122",
+      "name": "Gael Jiminez-Mestes",
+      "swim_team_id": "california-baptist",
+      "swimcloud_id": "2164326"
+    },
+    {
+      "id": "e8a1df19-a9c8-4767-9e96-cd045204c933",
+      "name": "Mario De Valle Jr",
+      "swim_team_id": "california-baptist",
+      "swimcloud_id": "2486072"
+    },
+    {
+      "id": "cebdf9dc-e1d0-4346-a226-c72659c22175",
+      "name": "Mark Kovacsics",
+      "swim_team_id": "california-baptist",
+      "swimcloud_id": "1737142"
+    },
+    {
+      "id": "4c0ca48d-33b7-4a49-9126-ce65d654a57c",
+      "name": "Dylan Felt",
+      "swim_team_id": "davidson",
+      "swimcloud_id": "1343891"
+    },
+    {
+      "id": "a2620d76-fdf7-4805-87c0-c04f3de2955d",
+      "name": "Kade Snyder",
+      "swim_team_id": "delaware",
+      "swimcloud_id": "1910932"
+    },
+    {
+      "id": "a8196227-98d7-4b69-8723-a38c67171291",
+      "name": "Matvei Namakonov",
+      "swim_team_id": "delaware",
+      "swimcloud_id": "1503419"
+    },
+    {
+      "id": "9b602944-dd56-4ee8-9e5a-36f3d2b381ef",
+      "name": "Sebastian Smith",
+      "swim_team_id": "drexel",
+      "swimcloud_id": "1268641"
+    },
+    {
+      "id": "a976c465-8220-4c5f-9aeb-16a72e28cb33",
+      "name": "Theo Andreopoulos",
+      "swim_team_id": "drexel",
+      "swimcloud_id": "1089426"
+    },
+    {
+      "id": "05c3b0c2-eae5-4840-91a4-5fc84500569b",
+      "name": "Daniel Laureyssens",
+      "swim_team_id": "florida-atlantic",
+      "swimcloud_id": "1769595"
+    },
+    {
+      "id": "39931157-b253-49c9-ad80-2806594f160c",
+      "name": "Owen Watkins",
+      "swim_team_id": "georgetown",
+      "swimcloud_id": "1640900"
+    },
+    {
+      "id": "6483d483-65c9-484d-943a-5e82f8f7e639",
+      "name": "Carter Dooling",
+      "swim_team_id": "grand-canyon",
+      "swimcloud_id": "1572490"
+    },
+    {
+      "id": "1bb29afd-43ff-4f21-b702-4114a220c8e2",
+      "name": "Juan Ramirez Tamayo",
+      "swim_team_id": "hawaii",
+      "swimcloud_id": "2920669"
+    },
+    {
+      "id": "6992baff-0154-44a4-a69c-ac6a08bf301b",
+      "name": "Karol Ostrowski",
+      "swim_team_id": "hawaii",
+      "swimcloud_id": "508605"
+    },
+    {
+      "id": "2ac59c5f-2db4-48af-be34-3588c0275d0e",
+      "name": "Tom Thalau",
+      "swim_team_id": "hawaii",
+      "swimcloud_id": "2425894"
+    },
+    {
+      "id": "6fe4aa00-324f-46d9-aec9-ea571d737d5b",
+      "name": "Harrison Nolan",
+      "swim_team_id": "illinois-chicago",
+      "swimcloud_id": "2495015"
+    },
+    {
+      "id": "051bf872-0fe4-42c6-a4bb-918c2fb5b4f5",
+      "name": "Logan Kelly",
+      "swim_team_id": "iu-indianapolis",
+      "swimcloud_id": "608645"
+    },
+    {
+      "id": "b6ae6d0d-8f08-4883-a27f-b331bec6d2e5",
+      "name": "Sebastian Otero",
+      "swim_team_id": "iu-indianapolis",
+      "swimcloud_id": "1058792"
+    },
+    {
+      "id": "8ffd3d06-caee-454e-bc59-02e413a2cc2f",
+      "name": "Yassin Abdelghany",
+      "swim_team_id": "iu-indianapolis",
+      "swimcloud_id": "1543659"
+    },
+    {
+      "id": "cc078a06-6d57-4d95-9146-7a2ac9a1cd48",
+      "name": "Carter Perkins",
+      "swim_team_id": "la-salle",
+      "swimcloud_id": "1629372"
+    },
+    {
+      "id": "7426d0b4-759a-4296-9628-f9c0945a7633",
+      "name": "Felix Jedbratt",
+      "swim_team_id": "la-salle",
+      "swimcloud_id": "2740114"
+    },
+    {
+      "id": "76aab292-4fd6-4616-b020-1b5dafc85085",
+      "name": "Joseph Hayburn",
+      "swim_team_id": "loyola",
+      "swimcloud_id": "508193"
+    },
+    {
+      "id": "2a15f2f5-68f3-433a-a2ae-34a0bdb4d9cc",
+      "name": "Farouk Farouk",
+      "swim_team_id": "miami-fl",
+      "swimcloud_id": "1162032"
+    },
+    {
+      "id": "70422e59-9be8-4d8a-a3dd-3bedf220a936",
+      "name": "Jake Passmore",
+      "swim_team_id": "miami-fl",
+      "swimcloud_id": "3404153"
+    },
+    {
+      "id": "571e5ce0-7b6e-44dd-b9ca-fddd206caf04",
+      "name": "Matteo Santoro",
+      "swim_team_id": "miami-fl",
+      "swimcloud_id": "3404154"
+    },
+    {
+      "id": "a2fd4cb1-72bd-482f-8c82-6f10f3233777",
+      "name": "Eli Rolfsen",
+      "swim_team_id": "miami-oh",
+      "swimcloud_id": "728394"
+    },
+    {
+      "id": "22d1495f-4d61-4240-91dd-77023f7c3403",
+      "name": "Sam Lorenz",
+      "swim_team_id": "milwaukee",
+      "swimcloud_id": "1455284"
+    },
+    {
+      "id": "4900f583-6db3-4ed5-8c53-f516654275af",
+      "name": "Kiefer Roemer",
+      "swim_team_id": "missouri-state",
+      "swimcloud_id": "1771134"
+    },
+    {
+      "id": "cb7ba765-6856-4fad-88ef-b2585e1c83be",
+      "name": "Christopher Palvadre",
+      "swim_team_id": "oakland",
+      "swimcloud_id": "1329812"
+    },
+    {
+      "id": "49dcd9db-31b0-4205-8202-ab853628da66",
+      "name": "Alex Parkinson",
+      "swim_team_id": "south-dakota",
+      "swimcloud_id": "1859644"
+    },
+    {
+      "id": "0a169f79-4c22-47b2-ad01-59f52557bad3",
+      "name": "Nick Rounds",
+      "swim_team_id": "south-dakota",
+      "swimcloud_id": "1864662"
+    },
+    {
+      "id": "091dd040-18ec-4c4c-86ce-a8b2c29b980a",
+      "name": "Joseph Busic",
+      "swim_team_id": "unc-wilmington",
+      "swimcloud_id": "1507581"
+    },
+    {
+      "id": "637562ea-6c1e-4d1a-ac91-4ad3ede39750",
+      "name": "William Carrico",
+      "swim_team_id": "unc-wilmington",
+      "swimcloud_id": "1560850"
+    },
+    {
+      "id": "bab168f8-9785-4f3c-998b-e890b791998f",
+      "name": "Alex Metzler",
+      "swim_team_id": "wyoming",
+      "swimcloud_id": "2328341"
+    },
+    {
+      "id": "ae1b058b-e9d4-4951-a85a-d2aef4d06012",
+      "name": "Jackson Kogler",
+      "swim_team_id": "wyoming",
+      "swimcloud_id": "2411623"
+    },
+    {
+      "id": "044f7d9a-5ac8-4a24-ba40-1832228eb351",
+      "name": "Simon Casey",
+      "swim_team_id": "wyoming",
+      "swimcloud_id": "1401610"
+    }
+  ]
+}
