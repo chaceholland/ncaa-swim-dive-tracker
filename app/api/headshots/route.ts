@@ -38,15 +38,21 @@ export async function OPTIONS() {
 // ── Supabase (server-side, service role) ───────────────────────────
 function getSupabase() {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Service role only — no anon fallback (anon is SELECT-only under RLS and
+  // Privileged key only — no anon fallback (anon is SELECT-only under RLS and
   // would make every update a silent no-op, which is the bug we're fixing).
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  //
+  // SUPABASE_SECRET_KEY is the current name for that key; SUPABASE_SERVICE_ROLE_KEY
+  // is a legacy alias for the same credential. `||` so an empty value falls through.
+  const key =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url) {
     throw new Error("Missing SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL");
   }
   if (!key) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    throw new Error(
+      "Missing SUPABASE_SECRET_KEY (or its legacy alias SUPABASE_SERVICE_ROLE_KEY)",
+    );
   }
   return createClient(url, key);
 }

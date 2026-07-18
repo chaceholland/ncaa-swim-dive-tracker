@@ -3,9 +3,9 @@ const http = require('http');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://dtnozcqkuzhjmjvsfjqk.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseKey) {
-  throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set — export it or add it to .env.local');
+  throw new Error('SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY) is not set — export it or add it to .env.local');
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);

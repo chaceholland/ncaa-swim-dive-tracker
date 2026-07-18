@@ -534,3 +534,69 @@ Re-scraping overwrites `photo_url` in place, so it self-heals every row it can m
 - **Missouri** returns a team-logo placeholder. The `bad` substring filter (`placeholder`, `default`, `silhouette`, `avatar`, `blank`) does not catch it — the URL looks like a normal asset.
 - No automated check exists that a stored headshot depicts the right person. A cheap partial guard: have `/api/headshots` reject an update whose `photo_url` filename slug does not share a token with the athlete's name.
 - The 3.6% figure comes from a 56-photo sample, not an audit. A full pass over all 1,509 photos is the only way to actually bound this.
+
+---
+
+## 12. Phase 7 — env var name mismatch resolved via alias; branches consolidated onto `main` (2026-07-18)
+
+### 12a. The mismatch — §9/§10 would have broken the next deploy
+
+Vercel carries **`SUPABASE_SECRET_KEY`** (Preview + Production, added 2026-06-03). It does **not** carry `SUPABASE_SERVICE_ROLE_KEY`.
+
+§9c and §10c standardized the code on `SUPABASE_SERVICE_ROLE_KEY` *and removed the silent anon fallback* — deliberately, so a missing key fails loudly instead of writing 0 rows. Correct call, wrong variable name. Combined, the next redeploy would have thrown on every privileged path: `/api/update` (the roster cron) and `/api/headshots` at first request, and every converted `scripts/` tool at startup. The §9e table's instruction to "confirm `SUPABASE_SERVICE_ROLE_KEY` is set in Vercel" was unactionable as written — the variable there has always had the other name.
+
+Note the two names are also different *formats* now: Chace's project issues the new `sb_secret_…` style, and legacy service-role JWTs were disabled 2026-04-22. Any `eyJ…` value still lying around is dead regardless of which name it sits under.
+
+### 12b. Resolution — accept either name for the same key
+
+Both names now resolve to one privileged credential:
+
+```ts
+const key =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+```
+
+`SUPABASE_SECRET_KEY` is primary; `SUPABASE_SERVICE_ROLE_KEY` is a legacy alias kept so older checkouts and CI keep working. If neither is set, the error names **both**.
+
+Two things this is explicitly **not**:
+- **Not a reintroduction of the anon fallback.** These are two names for the same privileged key. There is still no path from a missing secret to an anon/publishable client — §9b's reasoning stands unchanged, and the missing-key case still throws.
+- **Not `??`.** `||` is used on purpose: a variable that exists but is set to `""` (easy to do in the Vercel UI) falls through to the alias instead of resolving to an empty key.
+
+### 12c. Files changed (13)
+
+| File | Change |
+|---|---|
+| `scripts/lib/supabase-admin.ts` | Alias logic + both-names error message. **The only place the five `scripts/*.ts` tools needed it** — they all call `createAdminClient()`, so they inherit it with no edit. |
+| `app/api/update/route.ts`, `app/api/headshots/route.ts` | Alias logic inline (each builds its own client); both-names error. |
+| `app/api/health/route.ts` | Alias logic. *Not in the original scope* — caught by grep. It fails soft (a bad key surfaces as a 502, not a throw), so it was not deploy-blocking, but it would have stayed quietly broken. |
+| `check-teams.js` + the 7 `archive/scripts/*.js` one-offs from §10c | Same two-line fail-fast pattern in each; minimal style preserved, no restructuring. |
+| `.env.local.example` | `SUPABASE_SECRET_KEY` documented as primary, `SUPABASE_SERVICE_ROLE_KEY` noted as an accepted legacy alias (commented out), `HEADSHOT_SECRET` unchanged. |
+
+**Supersedes the §9e row for `SUPABASE_SERVICE_ROLE_KEY`** — nothing needs renaming in Vercel; the existing `SUPABASE_SECRET_KEY` is now read directly.
+
+### 12d. Known remaining readers (deliberately left alone)
+
+- `app/api/_lib/seasonGuard.js` — a **cross-project reference implementation, copied unmodified into each project**. Editing this copy would silently diverge it from the others. It only uses the key to log off-season skips and returns early when unset, so the failure mode is a missing log row, not a broken route. Fix it at the source and re-sync all copies.
+- `scripts/staging/*.mjs`, `RUN_ON_MAC.sh`, and the ~30 other `archive/scripts/*.js` files — local, hand-run one-offs, untouched by §9/§10 and not on any deploy path. Several still carry pre-existing anon fallbacks. Worth a sweep, not urgent.
+
+### 12e. Branch consolidation
+
+`fix-mens-roster-scope` (bd3c0f9, §11) merged into `main` as a **fast-forward — no conflicts**, `main` having had nothing `bd3c0f9` lacked. `main` now carries §9 through §12 in one line, so a single `git push` ships everything.
+
+### 12f. Verification
+
+- `npx tsc --noEmit` → **clean (exit 0)**.
+- `eslint` on all 12 changed code files, diffed against a HEAD baseline of the same files → **22 errors / 8 warnings before, 22 errors / 8 warnings after; no new findings**. All pre-existing (`no-require-imports` in the CommonJS one-offs, `no-explicit-any`, `ban-ts-comment`, unused vars); only line numbers shifted where comments were added. `scripts/lib/supabase-admin.ts` and `app/api/headshots/route.ts` remain eslint-clean.
+- `node --check` on all 8 changed `.js` files → **8/8 OK**.
+- No DB writes, no network calls, nothing pushed.
+
+### 12g. Remaining manual steps for Chace
+
+Nothing else is code-blocked; these are all outside this environment (no git credentials, no Vercel/Supabase write access here).
+
+1. **Add `HEADSHOT_SECRET` in Vercel** (Preview + Production) — still the one genuinely missing variable. Generate with `openssl rand -hex 32`. Until it is set, `/api/headshots` returns 503 by design.
+2. **Add the same `HEADSHOT_SECRET` to `.env.local`.** `SUPABASE_SECRET_KEY` should already be there; if `.env.local` only has `SUPABASE_SERVICE_ROLE_KEY`, that now works as-is — renaming is optional cleanup, not a fix.
+3. **`git push`** — `main` is committed locally and unpushed.
+4. **Redeploy** and confirm `/api/update` and `/api/health` return 200 rather than a missing-key throw.
+5. **Load the secret into the extension** — §9f, unchanged: `chrome.storage.local.set({ headshotSecret: '…' })` in the service-worker console, using the same value set in Vercel.
+6. Then §11f: re-scrape the men's rosters before the October season.

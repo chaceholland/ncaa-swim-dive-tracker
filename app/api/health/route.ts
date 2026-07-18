@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Same privileged key under either name: SUPABASE_SECRET_KEY is current,
+// SUPABASE_SERVICE_ROLE_KEY is the legacy alias. Never the anon key.
+const SUPABASE_KEY =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const LOG_TABLE = "swim_sync_log";
 const APP = "swim";
 
