@@ -600,3 +600,76 @@ Nothing else is code-blocked; these are all outside this environment (no git cre
 4. **Redeploy** and confirm `/api/update` and `/api/health` return 200 rather than a missing-key throw.
 5. **Load the secret into the extension** — §9f, unchanged: `chrome.storage.local.set({ headshotSecret: '…' })` in the service-worker console, using the same value set in Vercel.
 6. Then §11f: re-scrape the men's rosters before the October season.
+
+---
+
+## 13. Phase 8 — graduation/departure reconciliation in the roster cron (2026-07-18)
+
+Rosters only ever grew. The cron upserted whoever it scraped and left everyone else alone — a placeholder comment in `app/api/update/route.ts` read *"Mark athletes not in this batch as potentially archived (we skip this for safety — manual review is better)."* So graduated seniors stayed in search and on team pages indefinitely. This closes that loop.
+
+### 13a. Where the logic went, and why there
+
+**`app/api/update/route.ts`** — the Vercel-cron roster refresh, replacing that placeholder comment. It is the only committed, scheduled, authoritative refresh: it already fetches each team's roster, already upserts per team, and already has the per-team athlete list in hand.
+
+The three other candidates were considered and rejected:
+
+| Candidate | Why not |
+|---|---|
+| `scripts/rescrape-teams.ts` | `teamsToScrape` is an empty array — currently a no-op. Hand-run Playwright one-off, and it raw-`INSERT`s rather than upserting. |
+| `scripts/staging/swimcloud-roster-apply.mjs` | Applies a hand-produced JSON from `SWIMCLOUD-ROSTER-REFRESH.md`. A staging one-off, not a recurring refresh. |
+| `scripts/staging/rescrape-rosters.mjs` | **Untracked** (never committed). Its own header calls it a port of `route.ts` that "bypasses the seasonGuard/10-team cap" — a scratch tool. See the open item in §13f. |
+
+### 13b. What it does
+
+After a team's roster is successfully scraped and upserted, every athlete row for that team that is **not** on the freshly scraped roster is set `is_archived = true`.
+
+A snapshot of the team's rows is read **before** the upsert loop, deliberately. The upsert writes `is_archived: false` on every scraped athlete, so an after-the-fact read can no longer distinguish a returning athlete from a steady-state one — and the partial-scrape guard needs the *pre-refresh* active count as its denominator.
+
+Identity matching prefers `swimcloud_id` and falls back to a normalized name (lowercased, accent-stripped, punctuation-stripped, **token-sorted**, so `Schmidt, Danny` ≡ `Danny Schmidt` and `José García` ≡ `Jose Garcia`). Note the SIDEARM player payload carries no Swimcloud id, so in practice today every match runs through the name path; the id path is plumbed for any future Swimcloud-sourced caller.
+
+That name key is intentionally **looser** than the upsert's exact `onConflict: "team_id,name"`. The bias is one-directional and deliberate: being too loose leaves a stale row active (harmless, visible, fixable), while being too strict archives someone who never left. Digits are stripped along with other non-letters, which is why a mismatch can only ever *under*-archive.
+
+### 13c. The guards — a flaky scrape must never mass-archive a roster
+
+All four bail out **before any write** and log a warning naming the team; the refresh itself still succeeds.
+
+| Guard | Trips when | Rationale |
+|---|---|---|
+| `empty_scrape` | scrape returned 0 athletes | A site outage, a changed API shape, or a missed sport id all surface as zero rows. Archiving on that wipes a whole roster out of the tracker. |
+| `partial_scrape` | scraped < **50%** of the team's pre-refresh active count | A half-loaded roster (pagination cut short, men's/women's split mis-parsed) returns a plausible but truncated list. 16-of-34 is a bad scrape, not 18 departures. |
+| `cap_exceeded` | departures > **30** for one team in one run | Past the ratio guard, a large departure list usually means a systematic mismatch (a site that reformatted every name), not real attrition. Skips the team **entirely** rather than archiving a partial subset. |
+| `snapshot_unavailable` | the pre-refresh snapshot read failed | No valid basis for comparison. |
+
+A failed archive UPDATE is reported the same way (`update_failed`) rather than being swallowed.
+
+Guard trips are surfaced three ways, because a silently-skipped archive is exactly the thing that would otherwise go unnoticed: a `console.warn` per team, an `archiveGuardTrips` array in the JSON response and in the ntfy/Slack alert payload, and an appended note on the `swim_sync_log` row.
+
+### 13d. Archived, never deleted — and it is reversible
+
+Departures are archived, **never** deleted, and no results table is touched. `swim_individual_results` joins meet history on `athletes.swimcloud_id`; deleting a departed athlete orphans every result they ever swam (Danny Schmidt alone has 29 result rows). Deletion was explicitly out of scope.
+
+`is_archived = true` is sufficient to drop an athlete from the tracker — `app/search/page.tsx:34` and `app/team/[id]/page.tsx:80` both already filter `.eq("is_archived", false)`, so this needed **zero UI work**. The row and its full results history stay intact and queryable.
+
+Reversal is automatic in both directions: the upsert at `route.ts` writes `is_archived: false`, so an athlete who reappears on any scraped roster is un-archived with no manual step. The only write this feature performs is `UPDATE athletes SET is_archived = true, updated_at = now() WHERE id IN (…)`.
+
+### 13e. Transfers and graduations are indistinguishable — by design
+
+From a single team's perspective there is no difference: both are "no longer on this roster", and the roster gives no signal about which. **Both archive.** The difference only resolves later — when the transfer's *new* team is scraped, the upsert un-archives them under the new `team_id`. A graduation simply never gets un-archived.
+
+Two consequences worth knowing:
+
+- A transfer is briefly archived — invisible in the tracker — between their old team's refresh and their new team's. With `STALE_DAYS = 7` and `MAX_TEAMS_PER_RUN = 10`, that window can be up to a few cron cycles. It is self-healing, not a state anyone needs to repair.
+- If the new team isn't in `ROSTER_URLS` at all, the transfer stays archived permanently. That is arguably correct — they are no longer on a tracked roster — but it is a judgement call, not a law.
+
+### 13f. Verification and open items
+
+- `npx tsc --noEmit` → **clean (exit 0)**.
+- `eslint app/api/update/route.ts`, diffed against a HEAD baseline of the same file → **3 errors / 1 warning before, 3 errors / 1 warning after; no new findings.** All pre-existing (two `ban-ts-comment` on the `@ts-ignore` imports, and the misplaced disable directive + `no-explicit-any` on `writeSyncLog`).
+- **36-assertion throwaway harness** over the real extracted `reconcileDepartures` + `normalizeName` source, against a stubbed Supabase client that throws on `delete`/`insert`/`upsert`: all four guards verified to write nothing, the 50% boundary verified inclusive (17-of-34 proceeds, 16-of-34 does not), accent/comma/apostrophe/whitespace variants verified as matches rather than departures, `swimcloud_id` verified to win over a differing name, already-archived athletes verified not to be re-written, and returning athletes verified to count as un-archived rather than departed. The harness lived in `/tmp` and was not committed — there is no test runner in this repo to host it.
+- No DB writes, no network calls, nothing pushed.
+
+Open items:
+
+1. **`scripts/staging/rescrape-rosters.mjs` does not reconcile.** It is untracked, so it was left alone rather than swept into this commit. If Chace runs it for the pre-season full refresh (§11f) instead of letting the cron work through teams 10-at-a-time, departures will not be archived on that pass — the next cron cycle over each team will catch them. Porting the same logic (or committing the script) is the clean fix.
+2. **The `unarchived` count mirrors the upsert's exact-name key**, not the looser normalized key. An archived athlete who returns under a *reformatted* name is upserted as a new row and the old archived row stays archived — reported honestly as matched-but-not-un-archived. Rare, and it produces a stale archived row rather than any data loss.
+3. **Nothing bulk-archives the existing backlog.** Seniors who graduated before this shipped are only archived when their team's next refresh runs.
