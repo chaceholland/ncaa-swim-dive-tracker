@@ -1,5 +1,35 @@
 // Updated background.js with custom handlers for Kentucky, LSU
+//
+// SECRET PROVISIONING
+// -------------------
+// The shared secret must equal the server's HEADSHOT_SECRET env var. There are
+// two ways to supply it, tried in this order:
+//
+//   1. config.local.js — a gitignored file next to this one containing:
+//        self.HEADSHOT_SECRET = "the-secret-value";
+//      This is the scriptable path: a shell script can write the file, so no
+//      manual console step is needed. The file is absent in a fresh clone and
+//      the extension loads fine without it (the import below is guarded).
+//
+//   2. chrome.storage.local — the original manual path, kept as a fallback.
+//      From the service worker console (chrome://extensions -> Inspect views):
+//        chrome.storage.local.set({ headshotSecret: 'the-secret-value' })
+//
+// See config.local.example.js for the file shape. DO NOT commit a real value.
 console.log('=== BACKGROUND SCRIPT LOADED ===');
+
+// Classic (non-module) service worker, so importScripts is available and the
+// failure is catchable. A static `import` could not be used here: it would be
+// hoisted and would hard-fail worker startup whenever config.local.js is
+// absent, which is the normal state of a fresh clone.
+try {
+  importScripts('config.local.js');
+  console.log('config.local.js loaded');
+} catch (err) {
+  // Expected when the file has not been provisioned. Not an error condition:
+  // the chrome.storage.local fallback below may still supply the secret.
+  console.log('config.local.js not present - falling back to chrome.storage.local');
+}
 
 // Headshots are no longer PATCHed straight into Supabase. Writing with the
 // anon key was a silent no-op (RLS: anon is SELECT-only, PostgREST returns 204
@@ -8,20 +38,29 @@ console.log('=== BACKGROUND SCRIPT LOADED ===');
 const API_BASE_URL = 'https://ncaa-swim-dive-tracker.vercel.app';
 const HEADSHOTS_ENDPOINT = API_BASE_URL + '/api/headshots';
 
-// Shared secret; must equal the server's HEADSHOT_SECRET env var.
-// DO NOT commit a real value here. Load it once from the service worker
-// console (chrome://extensions -> Inspect views: service worker):
-//   chrome.storage.local.set({ headshotSecret: 'the-secret-value' })
-const HEADSHOT_SECRET_FALLBACK = '';
+// How to provision the secret, named once so every error message stays in sync.
+const SECRET_HELP =
+  'Either write csd-headshot-extension/config.local.js containing ' +
+  'self.HEADSHOT_SECRET = "..."; and reload the extension, or run ' +
+  'chrome.storage.local.set({ headshotSecret: "..." }) in the service ' +
+  'worker console.';
 
 async function getHeadshotSecret() {
+  // 1. config.local.js (script-provisioned).
+  if (typeof self !== 'undefined' && self.HEADSHOT_SECRET) {
+    return self.HEADSHOT_SECRET;
+  }
+
+  // 2. chrome.storage.local (manually pasted into the console).
   try {
     const stored = await chrome.storage.local.get('headshotSecret');
     if (stored && stored.headshotSecret) return stored.headshotSecret;
   } catch (err) {
     console.error('Could not read headshotSecret from storage: ' + err.message);
   }
-  return HEADSHOT_SECRET_FALLBACK;
+
+  // 3. Nothing configured — caller logs SECRET_HELP and skips uploading.
+  return '';
 }
 
 const TEAMS = [
@@ -112,7 +151,7 @@ async function scrapeAllTeams() {
   const secret = await getHeadshotSecret();
   if (!secret) {
     console.error('NO SECRET CONFIGURED — scrape will run but nothing will be saved.');
-    console.error('Run: chrome.storage.local.set({ headshotSecret: "..." }) and retry.');
+    console.error(SECRET_HELP);
   }
 
   for (let i = 0; i < TEAMS.length; i++) {
@@ -192,7 +231,8 @@ async function scrapeAllTeams() {
       if (updates.length === 0) {
         console.log('No headshots scraped for ' + team.name + ' - nothing to send');
       } else if (!secret) {
-        console.error('SKIPPED ' + updates.length + ' headshots - no headshotSecret configured');
+        console.error('SKIPPED ' + updates.length + ' headshots - no secret configured. ' +
+          SECRET_HELP);
       } else {
         try {
           const response = await fetch(HEADSHOTS_ENDPOINT, {

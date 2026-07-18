@@ -45,3 +45,6 @@ next-env.d.ts
 
 # generated swim dry-run artifacts
 scripts/staging/dry-run-meet-*.json
+
+# chrome extension local secret (see config.local.example.js)
+csd-headshot-extension/config.local.js
