@@ -1,0 +1,16 @@
+{
+  "description": "Derek Colbert (Missouri) duplicate SwimCloud profile merge. Repoints his 4 swim_individual_results rows from swimcloud id 1445080 -> 1427843 so all 5 of his results resolve through the canonical athletes row (athletes.swimcloud_id = 1427843). Only swim_individual_results contained these ids (verified: swim_diving_results, swim_relay_results legs 1-4, csd_athletes, favorites tables had none). No (meet_id,event_id,athlete_id) unique-key collisions.",
+  "date": "2026-07-17",
+  "table": "swim_individual_results",
+  "from_athlete_id": "1445080",
+  "to_athlete_id": "1427843",
+  "row_ids": [146261, 112247, 112730, 137485],
+  "rows_detail": [
+    {"id": 146261, "meet_id": "351190", "event_id": "platform-diving"},
+    {"id": 112247, "meet_id": "370160", "event_id": "1m-diving"},
+    {"id": 112730, "meet_id": "370160", "event_id": "3m-diving"},
+    {"id": 137485, "meet_id": "376056", "event_id": "1m-diving"}
+  ],
+  "rollback_sql": "UPDATE swim_individual_results SET athlete_id = '1445080' WHERE id IN (146261, 112247, 112730, 137485);",
+  "note": "swim_athletes still contains both Derek Colbert rows (ids 9c19e954... = 1427843, 686b2d59... = 1445080); left untouched, will be dropped with the table after burn-in."
+}

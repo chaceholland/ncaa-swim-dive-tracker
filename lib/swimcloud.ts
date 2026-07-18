@@ -9,8 +9,8 @@ import type {
   MeetTeamGroup,
 } from "@/lib/supabase/types";
 
-// Some teams use a non-standard slug in swim_teams/swim_athletes
-// that doesn't match the simple hyphenated form of their name.
+// Some teams use a non-standard slug in swim_teams that doesn't
+// match the simple hyphenated form of their name.
 const TEAM_SLUG_OVERRIDES: Record<string, string> = {
   virginia: "uva",
   // "Texas A&M" naively slugifies to "texas-a-m", but the swim slug is
@@ -72,19 +72,16 @@ export function formatEventName(eventId: string): string {
 }
 
 // Resolve an athlete's swimcloud_id — the join key into the swim results
-// ecosystem (swim_individual_results.athlete_id). Primary source is the
-// canonical `athletes` table, which now carries swimcloud_id; `swim_athletes`
-// is retained only as a fallback for roster rows not yet backfilled into
-// `athletes` (swim-only teams + a few duplicate records). See
-// scripts/staging/CONSOLIDATION-EXECUTION-NOTES.md.
+// ecosystem (swim_individual_results.athlete_id). Resolved from the canonical
+// `athletes` table, which carries swimcloud_id for every tracked roster athlete.
 async function findSwimcloudId(
   athleteName: string,
   teamName: string,
 ): Promise<string | null> {
   const supabase = createClient();
 
-  // Primary: canonical athletes. The athlete detail page passes athletes.name
-  // and teams.name, so match those directly via the athletes→teams relation.
+  // The athlete detail page passes athletes.name and teams.name, so match those
+  // directly via the athletes→teams relation.
   const { data: canonical } = await supabase
     .from("athletes")
     .select("swimcloud_id, teams!inner(name)")
@@ -95,23 +92,7 @@ async function findSwimcloudId(
     .maybeSingle();
 
   if (canonical?.swimcloud_id) return canonical.swimcloud_id as string;
-
-  // Fallback: swim_athletes (best-effort last-name match on the team slug),
-  // preserving prior behavior for ids not yet present in athletes.
-  const slug = teamNameToSlug(teamName);
-  const nameParts = athleteName.trim().split(/\s+/);
-  const lastName = nameParts[nameParts.length - 1];
-
-  const { data: legacy } = await supabase
-    .from("swim_athletes")
-    .select("swimcloud_id")
-    .eq("team_id", slug)
-    .ilike("name", `%${lastName}%`)
-    .not("swimcloud_id", "is", null)
-    .limit(1)
-    .maybeSingle();
-
-  return legacy?.swimcloud_id ?? null;
+  return null;
 }
 
 export async function getAthleteBestTimes(
@@ -286,10 +267,9 @@ async function loadMeetRows(meetId: number): Promise<{
 
   const athleteIds = Array.from(new Set(results.map((r) => r.athlete_id)));
 
-  // Resolve swimcloud_id -> { name, team-slug } for display. Primary source is
-  // the canonical `athletes` table (mapped to the swim-style team slug);
-  // `swim_athletes` is retained as a fallback for result ids not yet backfilled
-  // into athletes. See scripts/staging/CONSOLIDATION-EXECUTION-NOTES.md.
+  // Resolve swimcloud_id -> { name, team-slug } for display via the canonical
+  // `athletes` table (mapped to the swim-style team slug). Result ids with no
+  // matching athletes row render as "Athlete #id" (handled by the row builder).
   const athleteMap = new Map<string, { name: string; teamId: string }>();
 
   const { data: canonAthletes } = await supabase
@@ -320,21 +300,6 @@ async function loadMeetRows(meetId: number): Promise<{
         name: a.name,
         teamId: a.team_id ? (teamSlugByUuid.get(a.team_id) ?? "") : "",
       });
-    }
-  }
-
-  // Fallback: swim_athletes for result ids still unresolved (swim-only teams +
-  // duplicate records). Retained until swim_athletes is retired.
-  const unresolvedIds = athleteIds.filter((id) => !athleteMap.has(id));
-  if (unresolvedIds.length > 0) {
-    const { data: legacyAthletes } = await supabase
-      .from("swim_athletes")
-      .select("swimcloud_id, name, team_id")
-      .in("swimcloud_id", unresolvedIds);
-    for (const a of legacyAthletes ?? []) {
-      if (a.swimcloud_id && !athleteMap.has(a.swimcloud_id)) {
-        athleteMap.set(a.swimcloud_id, { name: a.name, teamId: a.team_id });
-      }
     }
   }
 

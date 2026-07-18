@@ -146,8 +146,8 @@ Full statement stored as `rollback_sql` in `scripts/staging/backups/inserted_ids
 - [ ] `git push` the branch (nothing was committed or pushed by this run). The migration `20260716174347` is already applied to the remote DB.
 - [ ] **Before dropping `swim_athletes`** (do only after burn-in): eliminate the fallback so nothing orphans —
   1. ~~Add the 23 swim-only teams to `teams`, import the **39** deferred athletes~~ **DONE in §7** (2026-07-16). Net-new orphans are now **1** (down from 40): only Derek Colbert/Missouri's second SwimCloud id `1445080`.
-  2. Resolve the last orphan (see §7c). Because Derek is a true SwimCloud duplicate whose **both** ids appear in results, a single-value `athletes.swimcloud_id` cannot resolve both. Options: (a) accept losing `1445080`'s 4 result-row resolutions and remove the fallback anyway; (b) add a second `athletes` row for Derek carrying `1445080`; or (c) make swimcloud_id multi-valued. Any of these must precede fallback removal.
-  3. Only once orphans == 0: delete the `swim_athletes` fallback + name-match bridge from the three files (`lib/swimcloud.ts`, `components/TopPerformersStrip.tsx`, `lib/supabase/types.ts`), then `DROP TABLE swim_athletes`.
+  2. Resolve the last orphan (see §7c) — **DONE 2026-07-17 (§8):** merged Derek's duplicate id `1445080 → 1427843` at the DB level (4 `swim_individual_results` rows; manifest `backups/derek_colbert_merge_20260717.json`). Orphans now **0**.
+  3. ~~delete the `swim_athletes` fallback + name-match bridge~~ — **DONE 2026-07-17 (§8):** fallback + bridge removed from `lib/swimcloud.ts` and `components/TopPerformersStrip.tsx`; `swim_athletes` is now functionally unreferenced in app code (only a provenance comment remains on `athletes.swimcloud_id` in `lib/supabase/types.ts`). **Remaining: `DROP TABLE swim_athletes` after burn-in.**
 
 ---
 
@@ -178,6 +178,8 @@ Net-new repoint orphans (result-referenced swimcloud_ids resolvable via `swim_at
 
 Because orphans are **> 0**, the `swim_athletes` fallback + name-match photo bridge in `lib/swimcloud.ts` and `components/TopPerformersStrip.tsx` were **KEPT (not removed)** so `1445080`'s 4 result rows still resolve — zero display regression. `swim_athletes` therefore **remains code-referenced** (retirement is one Derek-Colbert decision away; see §6).
 
+> **[SUPERSEDED 2026-07-17 — see §8]** Derek's `1445080` was merged into `1427843` at the DB level, dropping orphans to **0**; the `swim_athletes` fallback + name-match bridge have now been removed and the table is code-unreferenced.
+
 ### 7e. Home page
 Expands **53 → 76** teams as expected: `app/page.tsx` fetches `teams` filtered `athlete_count > 0`, and the trigger populated the 23 new teams' counts in 7b.
 
@@ -199,3 +201,37 @@ DELETE FROM public.teams WHERE id IN (<23 ids>);
 ```
 Full `rollback_sql` is stored in each manifest. The §3 (28-row) and §4 (swimcloud_id) rollbacks are unchanged.
 - [ ] Optional: also port `logo_fallback_url` + `conference_display_name` before retiring `teams` (separate from `swim_athletes`; see CONSOLIDATION-READY.md §4.6).
+
+---
+
+## 8. Phase 3 — Derek Colbert merged, orphans 0, fallback + bridge removed; `swim_athletes` code-unreferenced (2026-07-17)
+
+Continuation on branch `consolidate-athletes-canonical`. Clears the final blocker from §7c/§7d and removes the retained `swim_athletes` fallback so the table is now retireable. **This code-cleanup pass made zero DB writes** (no DML/DDL, no writes to `swim_athletes`, no drop/alter); the enabling merge in 8a was applied separately at the DB level.
+
+### 8a. Final orphan cleared — Derek Colbert / Missouri merge (DB-level)
+The lone net-new orphan from §7d (`1445080`) was resolved by merging Derek's duplicate SwimCloud profile into his canonical id. His 4 `swim_individual_results` rows were repointed `1445080 → 1427843` (the id the canonical `athletes` row `06b29d8d…` already carries), so all 5 of his results now resolve via `athletes.swimcloud_id`.
+- Manifest / rollback: `scripts/staging/backups/derek_colbert_merge_20260717.json` (4 row ids `[146261, 112247, 112730, 137485]` + `rollback_sql`).
+- Verified `1445080` appeared **only** in `swim_individual_results` — not in `swim_diving_results`, `swim_relay_results` (legs 1–4), `csd_athletes`, or favorites — and the repoint hit no `(meet_id, event_id, athlete_id)` unique-key collision.
+- `swim_athletes` still holds both Derek rows (`1427843`, `1445080`); left untouched — they drop with the table.
+
+### 8b. Orphan re-check (read-only) — now 0
+Every `athlete_id` referenced by `swim_individual_results`, `swim_diving_results`, and `swim_relay_results` (all four relay legs) now resolves via `athletes.swimcloud_id`. **Retirement-blocking orphans = 0** (was 1 in §7d, 40 in §4c). Removing the fallback therefore causes no display regression.
+
+### 8c. Fallback + name-match bridge removed (code)
+With orphans at 0, the `swim_athletes` fallback + name-match photo bridge that §4d/§7d had **KEPT** were removed. Clean `athletes`-primary (by `swimcloud_id`) reads remain; behavior is identical for the resolvable set (now everything).
+- `lib/swimcloud.ts` — `findSwimcloudId`: dropped the `swim_athletes` last-name/slug fallback (now `athletes` name + `teams.name` only). `loadMeetRows`: dropped the `swim_athletes` fallback for unresolved result ids; any unmatched id falls through to the existing `Athlete #id` render (unreachable for the tracked set now). Also trimmed the stale `swim_athletes` mention in the `TEAM_SLUG_OVERRIDES` comment to `swim_teams`.
+- `components/TopPerformersStrip.tsx` — universe now reads only `athletes.swimcloud_id` (dropped the `swim_athletes` union); removed the entire `swim_athletes` fallback block including the name-match photo/profile bridge to `athletes` and the now-unused `slugToDisplayName` helper.
+
+### 8d. `swim_athletes` now unreferenced in app code
+Grep of the app tree (`app/`, `components/`, `lib/`, `hooks/`) for `swim_athletes` / `from('swim_athletes')` / `swimAthletes`:
+- **No functional references remain.** `lib/swimcloud.ts` and `components/TopPerformersStrip.tsx` are token-free.
+- The only remaining app-tree mention is a **provenance comment** on `athletes.swimcloud_id` in `lib/supabase/types.ts` ("Backfilled from swim_athletes …") — documentation only; it does not read or type the table and does not block a DROP.
+- Archived / staging one-offs under `scripts/` and `archive/scripts/` (plus `docs/plans/`, `CLAUDE.md`) retain historical references — intentionally left as-is.
+
+### 8e. Verification
+- `npx tsc --noEmit` → **clean (exit 0)**.
+- `eslint lib/swimcloud.ts components/TopPerformersStrip.tsx` → **clean (exit 0)**.
+- `next build` still not runnable in the Linux sandbox (lightningcss native-binary mismatch, §4e) — environmental, unrelated; builds on Chace's Mac.
+
+### 8f. Status — `swim_athletes` is now safe to DROP after burn-in
+The table is functionally code-unreferenced and every result id resolves via `athletes`. Remaining hand-off: `git push` the branch, smoke-test, then after a burn-in window `DROP TABLE swim_athletes`. No separate rollback data is needed for this code pass — revert the branch commit to restore the fallback; the Derek merge reverses via its manifest `rollback_sql`.

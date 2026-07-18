@@ -54,27 +54,16 @@ export default function TopPerformersStrip() {
       try {
         const supabase = createClient();
 
-        // 1. Universe of tracked (men's) swimcloud_ids used to scope results.
-        //    Primary source is the canonical `athletes` table (now carries
-        //    swimcloud_id); union with swim_athletes as a fallback so roster
-        //    rows not yet backfilled into athletes stay eligible. See
-        //    scripts/staging/CONSOLIDATION-EXECUTION-NOTES.md.
-        const [{ data: canonUniverse }, { data: legacyUniverse }] =
-          await Promise.all([
-            supabase
-              .from("athletes")
-              .select("swimcloud_id")
-              .not("swimcloud_id", "is", null),
-            supabase
-              .from("swim_athletes")
-              .select("swimcloud_id")
-              .not("swimcloud_id", "is", null),
-          ]);
+        // 1. Universe of tracked (men's) swimcloud_ids used to scope results,
+        //    read from the canonical `athletes` table (carries swimcloud_id for
+        //    every tracked roster athlete).
+        const { data: canonUniverse } = await supabase
+          .from("athletes")
+          .select("swimcloud_id")
+          .not("swimcloud_id", "is", null);
 
         const maleAthleteIds = new Set<string>();
         for (const a of canonUniverse ?? [])
-          if (a.swimcloud_id) maleAthleteIds.add(a.swimcloud_id as string);
-        for (const a of legacyUniverse ?? [])
           if (a.swimcloud_id) maleAthleteIds.add(a.swimcloud_id as string);
 
         if (maleAthleteIds.size === 0) {
@@ -120,15 +109,6 @@ export default function TopPerformersStrip() {
 
         const athleteIds = top10.map(([id]) => id);
 
-        // Slug -> display name (e.g. "ohio-state" → "Ohio State"), used only for
-        // swim_athletes-fallback rows whose team is a slug.
-        function slugToDisplayName(slug: string): string {
-          return slug
-            .split("-")
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" ");
-        }
-
         type Resolved = {
           name: string;
           teamId: string;
@@ -140,8 +120,8 @@ export default function TopPerformersStrip() {
         };
         const resolved = new Map<string, Resolved>();
 
-        // 4. Primary resolve: canonical athletes give name, team, photo, profile
-        //    id and team uuid in one lookup — no name-matching needed.
+        // 4. Resolve via canonical athletes: name, team, photo, profile id and
+        //    team uuid in one lookup — no name-matching needed.
         const { data: canonAthletes } = await supabase
           .from("athletes")
           .select("id, swimcloud_id, name, photo_url, team_id")
@@ -184,82 +164,7 @@ export default function TopPerformersStrip() {
           });
         }
 
-        // 5. Fallback: swim_athletes for top-10 ids not yet in athletes (the
-        //    ~40 roster rows on swim-only teams). Name/team come from
-        //    swim_athletes; photos + profile ids via the retained name-match
-        //    bridge to athletes (best-effort). Do NOT remove this bridge until
-        //    those rows are imported — see CONSOLIDATION-EXECUTION-NOTES.md.
-        const unresolvedIds = athleteIds.filter((id) => !resolved.has(id));
-        if (unresolvedIds.length > 0) {
-          const { data: legacyAthletes } = await supabase
-            .from("swim_athletes")
-            .select("swimcloud_id, name, team_id")
-            .in("swimcloud_id", unresolvedIds);
-          const legacyRows = legacyAthletes ?? [];
-
-          const legacyNames = legacyRows.map((a) => a.name).filter(Boolean);
-          const bridge = new Map<
-            string,
-            {
-              photoUrl: string | null;
-              id: string;
-              teamUuid: string | null;
-              teamLogoUrl: string | null;
-            }
-          >();
-          if (legacyNames.length > 0) {
-            const { data: webAthletes } = await supabase
-              .from("athletes")
-              .select("id, name, photo_url, team_id")
-              .eq("is_archived", false)
-              .in("name", legacyNames);
-
-            const bridgeTeamUuids = [
-              ...new Set(
-                (webAthletes ?? []).map((w) => w.team_id).filter(Boolean),
-              ),
-            ];
-            const bridgeLogo = new Map<string, string>();
-            if (bridgeTeamUuids.length > 0) {
-              const { data: teamLogos } = await supabase
-                .from("teams")
-                .select("id, logo_url, logo_fallback_url")
-                .in("id", bridgeTeamUuids);
-              for (const t of teamLogos ?? []) {
-                const logo = t.logo_url || t.logo_fallback_url;
-                if (logo) bridgeLogo.set(t.id, logo);
-              }
-            }
-            for (const w of webAthletes ?? []) {
-              if (!bridge.has(w.name)) {
-                bridge.set(w.name, {
-                  photoUrl: w.photo_url ?? null,
-                  id: w.id,
-                  teamUuid: w.team_id ?? null,
-                  teamLogoUrl: w.team_id
-                    ? (bridgeLogo.get(w.team_id) ?? null)
-                    : null,
-                });
-              }
-            }
-          }
-
-          for (const a of legacyRows) {
-            if (!a.swimcloud_id || resolved.has(a.swimcloud_id)) continue;
-            const b = bridge.get(a.name);
-            resolved.set(a.swimcloud_id, {
-              name: a.name,
-              teamId: a.team_id ?? "",
-              teamName: a.team_id ? slugToDisplayName(a.team_id) : "",
-              photoUrl: b?.photoUrl ?? null,
-              profileId: b?.id ?? null,
-              teamUuid: b?.teamUuid ?? null,
-              teamLogoUrl: b?.teamLogoUrl ?? null,
-            });
-          }
-        }
-
-        // 6. Build performer list (order follows the top-10 ranking).
+        // 5. Build performer list (order follows the top-10 ranking).
         const performerList: Performer[] = top10.map(
           ([athleteId, timeMs], idx) => {
             const r = resolved.get(athleteId);
