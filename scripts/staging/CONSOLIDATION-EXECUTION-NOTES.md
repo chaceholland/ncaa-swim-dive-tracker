@@ -403,3 +403,134 @@ No new-format keys (`sb_secret_…` / `sb_publishable_…`) appear anywhere in t
 
 ### 10f. Guardrail worth adding (not done)
 Nothing currently stops the next hardcoded key from landing. Consider a pre-commit hook or CI step that greps staged content for the JWT header prefix and fails on any hit whose decoded `role` is `service_role`.
+
+## 11. Phase 6 — headshot scraper scoped to the men's roster (2026-07-18)
+
+Branch `fix-mens-roster-scope`. Fixes wrong-gender headshots at the source. **Code only — this pass does not correct a single photo already in the bucket. See §11f.**
+
+### 11a. The finding — women's photos on men's athletes
+
+A spot-check of **56 headshots across 22 schools** turned up:
+
+| Defect | Count | Rate |
+|---|---|---|
+| **Wrong gender** (a woman's photo on a men's-roster athlete) | **2** | **3.6%** |
+| Not a headshot (distant / full-body action shots — all Georgia Tech) | 3 | 5.4% |
+| Team-logo placeholder instead of a person (Missouri) | 1 | 1.8% |
+
+The two confirmed gender mismatches:
+
+- `athlete-headshots/auburn/danny-schmidt.jpg` — a **female** athlete. Auburn's combined roster page carries a **"Hanna Schmidt"** on the women's side. Same surname, so the name-matching upload picked the wrong card.
+- `athlete-headshots/north-carolina/tom-mienis.webp` — a **female** athlete in UNC gear.
+
+Only the wrong-gender class is addressed here. The Georgia Tech action shots and the Missouri logo placeholder are separate defects and are **not** fixed by this pass (§11g).
+
+### 11b. Root cause — the scraper read whole combined pages
+
+`csd-headshot-extension/background.js` injected `extractAthletes()` into each roster URL and ran its card selectors against **`document`** — the entire page.
+
+Many school roster pages are **combined**. `auburntigers.com/sports/swimming-diving/roster` renders, in one document:
+
+```
+## Women's Roster
+## Men's Roster
+## Swimming & Diving Coaching Staff
+## Support Staff
+```
+
+So `document.querySelectorAll('.sidearm-roster-player')` returned the women's cards, the men's cards, and often the staff cards, in one flat list. Every one of them was uploaded as a men's athlete. The endpoint then matched on name, and a shared surname (Schmidt) was enough to land a woman's photo on a man's row.
+
+**The URL path is not a reliable signal, and that is the important part.** Of the 51 configured teams, 39 use a men-specific path (`/mens-swimming-and-diving/`, `/mswim/`) and 12 use a non-gendered one:
+
+> Alabama, Auburn, Georgia, LSU, South Carolina, Texas A&M, Florida State, Georgia Tech, NC State, Pittsburgh, Utah, West Virginia
+
+But **North Carolina's bad photo came from `goheels.com/sports/mens-swimming-and-diving/roster`** — a men-specific URL that still serves combined markup. A URL allow-list would therefore have missed it. The fix has to detect the page structure **at runtime**, which is what it now does.
+
+### 11c. What changed — `csd-headshot-extension/background.js` (only file)
+
+Detection runs inside the injected `extractAthletes()` (it is stringified by `chrome.scripting`, so every helper had to be declared inside it — nothing can be hoisted to the service-worker scope).
+
+1. **Classify section headings.** Scan `h1-h4` plus `[class*="section-title"]` / `[class*="sectionTitle"]` / `[class*="section_title"]` / `[class*="roster-title"]` / `[class*="rosterTitle"]`, skipping anything inside `nav`/`select`/`option` and any text over 120 chars. Normalize curly apostrophes (`’` → `'`) and collapse whitespace, then tag each heading `men` / `women` / `staff`.
+
+   The men's pattern is `/\bmen'?s[\s\S]{0,40}?\brosters?\b/i`. **The leading `\b` is what stops it matching the tail of "women's roster"** — `o` and `m` are both word characters, so there is no boundary there. A single heading that matches *both* patterns (`"Men's & Women's Roster"`) is deliberately left unclassified: it is one undivided list, not a boundary, so the page falls back to whole-page mode rather than being filtered to zero.
+
+2. **Scope to the men's subtree, but only if both genders are present.** If the page has a men's heading **and** a women's heading, pick a search root:
+   - *Containing section* — climb from the men's heading to the widest ancestor that still excludes every women's/staff heading. Handles nested `<section>` and tab-pane markup.
+   - *Sibling walk* — if that ancestor holds no cards (flat markup), walk `nextElementSibling` from the heading until a women's/staff heading, or any heading of the same-or-higher level, ends the section. This is what stops "Swimming & Diving Coaching Staff" being swept in.
+
+   A candidate is only accepted if it actually contains cards, tested against a probe selector that unions every per-site selector (`.sidearm-roster-player, .roster-card, li[class*="roster"], .s-person-card, a[href*="/roster/player/"], .sqs-row`). If no candidate works, it falls back to whole-page.
+
+3. **Fall back to whole-page when there is only one roster section, or none.** Unchanged behavior for the 39 men's-only pages that were already correct.
+
+4. **Safety net (independent of scoping).** On combined pages only, every card is rejected if either:
+   - the nearest **preceding** gendered heading in document order is the women's one (via `compareDocumentPosition`), or
+   - any ancestor within 12 levels has an `id`/`class` matching `/wom[ae]n/i` (SIDEARM tab panes such as `#women-roster`).
+
+   Gating this on "combined page" is what makes it safe: a men's-only URL can never be filtered down to zero by it.
+
+5. **Per-team audit logging.** Each team now prints which mode it used and what it caught:
+
+   ```
+     SCOPE: men's section scoped (sibling walk) via "Men's Roster"
+     Roster headings - mens: 1, womens: 1
+     Cards in scope: 27 | skipped as womens-roster: 0
+   ```
+
+   The pre-existing selector counts above these lines are still **whole-page** counts, on purpose — the two sets side by side are what make a run auditable. A combined page that falls back to whole-page mode emits a `console.warn` naming itself for follow-up.
+
+**Unchanged:** the batched `POST /api/headshots`, the `Authorization: Bearer` secret from `chrome.storage.local`, and all §9d upload logging. `background.js.backup` and `background-lsu-fix.js` were not touched. The diff is 238 insertions / 20 deletions in one file (10 of those deletions are trailing-whitespace churn on adjacent lines).
+
+### 11d. Verification
+
+Chromium could not launch in the Linux sandbox (missing host libraries), so the injected function was exercised against **jsdom** instead — the real DOM APIs it depends on (`querySelectorAll`, `closest`, `contains`, `compareDocumentPosition`, `matches`) all behave identically there.
+
+`extractAthletes()` was sliced out of `background.js` verbatim and run against 11 synthetic roster pages, each seeded with 3 men, 2 women (including the **Schmidt surname collision**), and — where the shape called for it — coaching/support staff cards. **All 11 pass — 3/3 men kept, 0 women, 0 staff, in every case:**
+
+| Case | Result |
+|---|---|
+| Flat combined, women → men → coaching staff → support staff (Auburn shape) | scoped, *sibling walk* |
+| Nested `<section>` blocks | scoped, *containing section* |
+| Men's-only, no gendered headings | whole page (fallback, correct) |
+| Reversed order — men's section first | scoped, *sibling walk* |
+| Ambiguous `"Men's & Women's Roster"` | whole page, **no filtering** (correct) |
+| `div.section-title` instead of `h*` tags | scoped, *sibling walk* |
+| Tab panes (`#women-roster` / `#mens-roster`) | scoped, *containing section* |
+| Men's section between staff and women's | scoped, *sibling walk* |
+| Men's heading present, no women's section | whole page (fallback, correct) |
+| **Scoping deliberately broken** (men's heading is a dead end) | whole page + **safety net removed 2 women** |
+| **Women's cards after the men's heading**, inside a women-labelled container | scoped + **safety net removed 2 women** |
+
+The last two matter most: they are the cases where scoping fails and the net is the only thing standing between a women's photo and the bucket. Both hold.
+
+- `node --check csd-headshot-extension/background.js` → **OK**.
+- `eslint csd-headshot-extension/background.js` → **clean (exit 0)**; the HEAD baseline of the same file was also clean, so **no new problems**.
+- `npx tsc --noEmit` → **clean (exit 0)**. (`background.js` is browser-only and not in the TS program; this only confirms nothing else regressed.)
+- **No DB reads or writes. No live scrape. Nothing pushed.**
+
+### 11e. What this pass does NOT do
+
+The extension is fixed. **The bucket is not.** Every wrong photo scraped before today is still attached to its athlete. The fix only changes what the *next* run collects.
+
+### 11f. Chace must re-scrape before the October season
+
+Scale of the correction, from the local `scripts/staging/backups/athletes_backup_20260716.json` snapshot (no live DB read this pass): **1,509 of 1,877 athletes have a populated `photo_url`**. At the sampled 3.6% mismatch rate that is a point estimate of **≈ 54 wrong-gender photos**, and because the sample was only 56 photos the honest range is roughly **20-170**. Mismatches also cluster — they need a surname collision across the two rosters — so the true figure depends on how many combined pages have one.
+
+To actually correct them:
+
+1. Set `HEADSHOT_SECRET` in the Vercel project env and `.env.local` (§9e), and redeploy. Until it is set, `/api/headshots` returns 503 by design.
+2. Load the secret into the extension (§9f): `chrome://extensions` → CSD Roster Headshot Scraper → **service worker** → `chrome.storage.local.set({ headshotSecret: '...' })`.
+3. Load/reload the unpacked extension from `csd-headshot-extension/` so the new `background.js` is live.
+4. Run the scrape from the popup, and **watch the service-worker console**. Confirm per team:
+   - the 12 non-gendered URLs in §11b report `SCOPE: men's section scoped`;
+   - `Cards in scope` is roughly half the whole-page `.sidearm-roster-player` count on those pages — that halving is the fix working;
+   - no team logs the `Combined page but scoping fell back to whole page` warning. Any team that does needs its markup looked at by hand.
+5. Re-check the two known-bad athletes afterwards: Auburn **Danny Schmidt**, North Carolina **Tom Mienis**.
+
+Re-scraping overwrites `photo_url` in place, so it self-heals every row it can match — but only for athletes still on a current roster page. **Anyone who has since graduated keeps their bad photo and needs a manual fix.**
+
+### 11g. Follow-ups (not done — out of scope)
+
+- **Georgia Tech** returns distant/full-body action shots rather than headshots (3 of 3 sampled). Likely a different image field on `ramblinwreck.com`; needs a per-site handler like Kentucky's and LSU's.
+- **Missouri** returns a team-logo placeholder. The `bad` substring filter (`placeholder`, `default`, `silhouette`, `avatar`, `blank`) does not catch it — the URL looks like a normal asset.
+- No automated check exists that a stored headshot depicts the right person. A cheap partial guard: have `/api/headshots` reject an update whose `photo_url` filename slug does not share a token with the athlete's name.
+- The 3.6% figure comes from a 56-photo sample, not an audit. A full pass over all 1,509 photos is the only way to actually bound this.

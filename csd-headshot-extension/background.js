@@ -155,7 +155,21 @@ async function scrapeAllTeams() {
       console.log('  a[href*="/roster/player/"]:', debug.ukCardCount);
       console.log('  .sqs-row:', debug.lsuCardCount);
       console.log('  Sample classes:', debug.sampleClasses);
-      
+
+      // Which extraction scope was used, so a run is auditable per team.
+      // The selector counts above are whole-page; these are the scoped ones.
+      console.log('  SCOPE: ' + debug.scopeMode + ' (' + debug.scopeStrategy + ')' +
+        (debug.scopeHeading ? ' via "' + debug.scopeHeading + '"' : ''));
+      console.log('  Roster headings - mens: ' + debug.mensHeadings +
+        ', womens: ' + debug.womensHeadings);
+      console.log('  Cards in scope: ' + debug.scopedCardCount +
+        ' | skipped as womens-roster: ' + debug.skippedWomens);
+      if (debug.mensHeadings > 0 && debug.womensHeadings > 0 &&
+          debug.scopeMode === 'whole page') {
+        console.warn('  Combined page but scoping fell back to whole page - ' +
+          'relying on the womens-section safety net only. Check this team.');
+      }
+
       const withPhotos = athletes.filter(a => a.headshot).length;
       console.log('Found ' + athletes.length + ' athletes, ' + withPhotos + ' with photos');
       
@@ -229,6 +243,12 @@ async function scrapeAllTeams() {
 }
 
 function extractAthletes() {
+  // NOTE: this function is stringified and injected by chrome.scripting, so it
+  // cannot reference anything from the service-worker scope. Every helper it
+  // uses has to be declared inside it.
+
+  // These counts are deliberately WHOLE-PAGE, so a run can be compared against
+  // the men's-scoped counts further down and the scoping can be audited.
   const debug = {
     title: document.title,
     readyState: document.readyState,
@@ -240,16 +260,210 @@ function extractAthletes() {
     lsuCardCount: document.querySelectorAll('.sqs-row').length,
     sampleClasses: ''
   };
-  
+
   const elements = document.querySelectorAll('[class]');
   const classes = Array.from(elements).slice(0, 20).map(el => el.className).join(' ');
   debug.sampleClasses = classes.substring(0, 200);
-  
+
+  // -------------------------------------------------------------------------
+  // MEN'S-ROSTER SCOPING
+  //
+  // Many school roster pages are COMBINED: one document renders "Women's
+  // Roster", then "Men's Roster", then coaching / support staff. Scraping the
+  // whole page pulls women's cards into a men-only tracker, and a surname
+  // collision then attaches the wrong photo to the right athlete (Auburn's
+  // "Hanna Schmidt" landing on "Danny Schmidt" is the confirmed case).
+  //
+  // If the page has BOTH a men's and a women's roster heading, restrict the
+  // search to the men's subtree. If it has only one (or neither), keep the old
+  // whole-page behavior — most configured URLs are already men's-only.
+  // -------------------------------------------------------------------------
+  const HEADING_SELECTOR = 'h1, h2, h3, h4, [class*="section-title"], ' +
+    '[class*="sectionTitle"], [class*="section_title"], [class*="roster-title"], ' +
+    '[class*="rosterTitle"]';
+
+  // Union of every per-site card selector used below; used to test whether a
+  // candidate scope actually contains a roster before committing to it.
+  const CARD_PROBE = '.sidearm-roster-player, .roster-card, li[class*="roster"], ' +
+    '.s-person-card, a[href*="/roster/player/"], .sqs-row';
+
+  // The \b before "men" is what keeps /men's roster/ from matching the tail of
+  // "women's roster" — o and m are both word chars, so there is no boundary.
+  const MENS_RE = /\bmen'?s[\s\S]{0,40}?\brosters?\b/i;
+  const WOMENS_RE = /\bwomen'?s[\s\S]{0,40}?\brosters?\b/i;
+  const STAFF_RE = /\b(coaching\s+staff|support\s+staff|coaches|staff|managers?)\b/i;
+
+  function normText(el) {
+    const raw = el.textContent || '';
+    return raw.replace(/[‘’ʼ]/g, "'").replace(/\s+/g, ' ').trim();
+  }
+
+  function headingLevel(el) {
+    const m = /^H([1-6])$/.exec(el.tagName);
+    return m ? parseInt(m[1], 10) : 99;
+  }
+
+  // Classify every section heading on the page, in document order.
+  const headings = [];
+  const headingEls = document.querySelectorAll(HEADING_SELECTOR);
+  for (let i = 0; i < headingEls.length; i++) {
+    const el = headingEls[i];
+    if (el.closest('nav, select, option')) continue;
+    const text = normText(el);
+    if (!text || text.length > 120) continue;
+    const isMen = MENS_RE.test(text);
+    const isWomen = WOMENS_RE.test(text);
+    let kind = null;
+    if (isMen && !isWomen) kind = 'men';
+    else if (isWomen && !isMen) kind = 'women';
+    // A single "Men's & Women's Roster" heading is ambiguous, not a boundary:
+    // leave it unclassified so the page falls back to whole-page mode.
+    else if (!isMen && !isWomen && STAFF_RE.test(text)) kind = 'staff';
+    if (kind) headings.push({ el: el, kind: kind, text: text });
+  }
+
+  const mensHeadings = headings.filter(h => h.kind === 'men');
+  const womensHeadings = headings.filter(h => h.kind === 'women');
+  const combined = mensHeadings.length > 0 && womensHeadings.length > 0;
+
+  function queryScoped(roots, selector) {
+    const out = [];
+    const seen = new Set();
+    for (let i = 0; i < roots.length; i++) {
+      const root = roots[i];
+      if (root.nodeType === 1 && root.matches(selector) && !seen.has(root)) {
+        seen.add(root);
+        out.push(root);
+      }
+      const found = root.querySelectorAll(selector);
+      for (let j = 0; j < found.length; j++) {
+        if (!seen.has(found[j])) {
+          seen.add(found[j]);
+          out.push(found[j]);
+        }
+      }
+    }
+    return out;
+  }
+
+  // True if `node` is, or wraps, a heading that ends the men's section.
+  function containsBoundary(node, mensEl) {
+    for (let i = 0; i < headings.length; i++) {
+      const h = headings[i];
+      if (h.el === mensEl || h.kind === 'men') continue;
+      if (node === h.el || node.contains(h.el)) return true;
+    }
+    return false;
+  }
+
+  function scopeForHeading(mensEl) {
+    // (a) Nested markup: climb to the widest ancestor that still excludes every
+    //     women's / staff heading. That ancestor is the men's section.
+    let anchor = mensEl;
+    while (anchor.parentElement &&
+           anchor.parentElement !== document.body &&
+           anchor.parentElement !== document.documentElement &&
+           !containsBoundary(anchor.parentElement, mensEl)) {
+      anchor = anchor.parentElement;
+    }
+    if (anchor !== mensEl && queryScoped([anchor], CARD_PROBE).length > 0) {
+      return { roots: [anchor], strategy: 'containing section' };
+    }
+
+    // (b) Flat markup: walk siblings from the heading until the next section
+    //     heading — women's, staff, or any heading of the same/higher level.
+    const mensLevel = headingLevel(mensEl);
+    const roots = [];
+    let node = anchor.nextElementSibling;
+    while (node) {
+      if (containsBoundary(node, mensEl)) break;
+      if (mensLevel <= 6 && headingLevel(node) <= mensLevel) break;
+      roots.push(node);
+      node = node.nextElementSibling;
+    }
+    if (roots.length > 0 && queryScoped(roots, CARD_PROBE).length > 0) {
+      return { roots: roots, strategy: 'sibling walk' };
+    }
+    return null;
+  }
+
+  let scopeRoots = null;
+  let scopeStrategy = 'n/a';
+  let scopeHeading = '';
+  if (combined) {
+    for (let i = 0; i < mensHeadings.length && !scopeRoots; i++) {
+      const found = scopeForHeading(mensHeadings[i].el);
+      if (found) {
+        scopeRoots = found.roots;
+        scopeStrategy = found.strategy;
+        scopeHeading = mensHeadings[i].text;
+      }
+    }
+  }
+  const roots = scopeRoots || [document];
+
+  debug.mensHeadings = mensHeadings.length;
+  debug.womensHeadings = womensHeadings.length;
+  debug.scopeMode = scopeRoots ? "men's section scoped" : 'whole page';
+  debug.scopeStrategy = scopeStrategy;
+  debug.scopeHeading = scopeHeading;
+  debug.scopeRootCount = roots.length;
+  debug.scopedCardCount = queryScoped(roots, CARD_PROBE).length;
+  debug.skippedWomens = 0;
+
+  // Safety net: even if scoping picked the wrong subtree (or fell back to the
+  // whole page), never accept a card that sits in the women's section. Only
+  // armed on genuinely combined pages, so a men's-only URL can never be
+  // filtered down to zero by it.
+  let skippedWomens = 0;
+
+  function inWomensSection(el) {
+    if (!combined) return false;
+
+    // (a) Nearest gendered heading preceding the card in document order.
+    let kind = null;
+    for (let i = 0; i < headings.length; i++) {
+      const h = headings[i];
+      if (h.kind === 'staff' || h.el === el) continue;
+      const pos = h.el.compareDocumentPosition(el);
+      // headings[] is in document order, so once one stops preceding the card,
+      // none of the later ones can either.
+      if (!(pos & Node.DOCUMENT_POSITION_FOLLOWING)) break;
+      kind = h.kind;
+    }
+    if (kind === 'women') return true;
+
+    // (b) An explicitly women-labelled container (SIDEARM tab panes, etc.).
+    let node = el;
+    let depth = 0;
+    while (node && node.nodeType === 1 && depth < 12) {
+      const cls = typeof node.className === 'string' ? node.className : '';
+      if (/wom[ae]n/i.test((node.id || '') + ' ' + cls)) return true;
+      node = node.parentElement;
+      depth++;
+    }
+    return false;
+  }
+
+  function keepCard(card) {
+    if (inWomensSection(card)) {
+      skippedWomens++;
+      return false;
+    }
+    return true;
+  }
+
+  function finish(list) {
+    debug.skippedWomens = skippedWomens;
+    debug.athleteCount = list.length;
+    return { athletes: list, debug: debug };
+  }
+
   const athletes = [];
-  
+
   // KENTUCKY: Special handler for UK Athletics
   if (window.location.hostname === 'ukathletics.com') {
-    const ukCards = document.querySelectorAll('a[href*="/roster/player/"]');
+    const ukCards = queryScoped(roots, 'a[href*="/roster/player/"]').filter(keepCard);
     ukCards.forEach((card) => {
       const nameEl = card.querySelector('h3');
       const imgEl = card.querySelector('img');
@@ -271,17 +485,19 @@ function extractAthletes() {
         }
       }
     });
-    return { athletes, debug };
+    return finish(athletes);
   }
-  
+
   // LSU: Special handler - uses similar structure to UK
   if (window.location.hostname === 'lsusports.net') {
-    let lsuCards = document.querySelectorAll('a[href*="/roster/player/"]');
-    
+    let lsuCards = queryScoped(roots, 'a[href*="/roster/player/"]');
+
     if (lsuCards.length === 0) {
-      lsuCards = document.querySelectorAll('.sqs-row, .roster-player, .athlete-card');
+      lsuCards = queryScoped(roots, '.sqs-row, .roster-player, .athlete-card');
     }
-    
+
+    lsuCards = lsuCards.filter(keepCard);
+
     lsuCards.forEach((card) => {
       const nameEl = card.querySelector('h3, h4, h2, p strong, .name, [class*="name"]');
       let imgEl = card.querySelector('img');
@@ -309,21 +525,23 @@ function extractAthletes() {
         }
       }
     });
-    return { athletes, debug };
+    return finish(athletes);
   }
-  
+
   // Try standard selectors for other sites
-  let players = document.querySelectorAll('.sidearm-roster-player');
+  let players = queryScoped(roots, '.sidearm-roster-player');
   if (players.length === 0) {
-    players = document.querySelectorAll('.roster-card');
+    players = queryScoped(roots, '.roster-card');
   }
   if (players.length === 0) {
-    players = document.querySelectorAll('li[class*="roster"]');
+    players = queryScoped(roots, 'li[class*="roster"]');
   }
   if (players.length === 0) {
-    players = document.querySelectorAll('.s-person-card');
+    players = queryScoped(roots, '.s-person-card');
   }
-  
+
+  players = players.filter(keepCard);
+
   players.forEach((player) => {
     const nameEl = player.querySelector('.sidearm-roster-player-name') ||
                   player.querySelector('[class*="name"]') ||
@@ -348,6 +566,6 @@ function extractAthletes() {
       }
     }
   });
-  
-  return { athletes, debug };
+
+  return finish(athletes);
 }
