@@ -1,11 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import { chromium, Page } from "playwright";
+// Service role required: this UPDATEs athletes, and anon is SELECT-only under
+// RLS (an anon run silently rewrites 0 rows).
+import { createAdminClient } from "./lib/supabase-admin";
 
-const supabaseUrl = "https://dtnozcqkuzhjmjvsfjqk.supabase.co";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0bm96Y3FrdXpoam1qdnNmanFrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDkwNjgzMCwiZXhwIjoyMDgwNDgyODMwfQ.JcESpa1uZq8tbc6XrGJynrEkW-eA9JHi41KrKlnXeUA";
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createAdminClient();
 
 interface TeamInfo {
   name: string;

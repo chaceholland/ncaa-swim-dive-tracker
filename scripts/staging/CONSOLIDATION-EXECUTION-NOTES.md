@@ -337,3 +337,69 @@ DROP TABLE public.swim_athletes;
 - `scripts/update-missing-data.ts:4-6` still contains a **hardcoded service-role JWT** in committed source. It was outside this pass's four-file scope, but that key is in git history and should be rotated, then the script switched to `createAdminClient()`. Rotating it means updating `SUPABASE_SERVICE_ROLE_KEY` in Vercel and `.env.local` at the same time.
 - `scripts/upgrade-image-quality.ts` is now armed (9c). Add a `--dry-run` flag and a `photo_url` backup before it is ever run.
 - Extension `manifest.json` still lacks a `host_permissions` entry for the tracker origin; the route's CORS headers cover it for now.
+
+## 10. Phase 5 — service-role key purged from the working tree (2026-07-18)
+
+Closes the first bullet of §9i, and it was worse than that bullet described: `scripts/update-missing-data.ts` was not the only file. A repo-wide scan for the JWT header prefix found the **same service-role key hardcoded in 9 tracked files**.
+
+### 10a. Treat the key as burned — rotate it
+
+**This repo is public on GitHub.** The service-role JWT was committed in plaintext, so it must be assumed compromised by anyone who cloned, forked, or scraped the repo, or read it through the GitHub API. Service-role bypasses RLS entirely — it is full read/write on every table.
+
+**Chace must rotate `SUPABASE_SERVICE_ROLE_KEY` in the Supabase dashboard**, then update it in both places at once (per §9e):
+- Vercel project env
+- local `.env.local`
+
+Rotation is the *only* fix that actually revokes the exposed key. Everything below is cleanup, not remediation — it stops the key being re-leaked going forward, it does not un-leak it.
+
+### 10b. Git history still contains the old key — that is expected
+
+Removing the literal from the working tree does **not** remove it from git history. Commit `bab1e06` and its ancestors still contain the key, and it remains reachable on the public remote.
+
+We deliberately did **not** rewrite history (`filter-repo` / `filter-branch` / force-push). On a published public repo a rewrite breaks every clone and fork, and it still cannot claw back a key that has already been fetched or cached by GitHub. **Rotation is the fix; history rewriting would be theater.** Once the key is rotated, the copy in history is a dead credential and harmless.
+
+### 10c. Files changed (9)
+
+| File | Change |
+|---|---|
+| `scripts/update-missing-data.ts` | Now uses `createAdminClient()` from `scripts/lib/supabase-admin.ts`, matching the four scripts converted in `bab1e06`. Dropped the local `createClient` / `supabaseUrl` / `supabaseKey` block. |
+| `check-teams.js` (repo root) | Literal → `process.env.SUPABASE_SERVICE_ROLE_KEY`, throws if unset. |
+| `archive/scripts/lightweight-scraper.js` | Same. |
+| `archive/scripts/manual-photo-batch-update.js` | Same. |
+| `archive/scripts/scrape-retry.js` | Same. |
+| `archive/scripts/scrape-update.js` | Same. |
+| `archive/scripts/simple-photo-updater.js` | Same. |
+| `archive/scripts/test-scrape.js` | Same. |
+| `archive/scripts/update-missing-data.js` | Same. |
+
+The eight plain-`.js` one-offs are not TS-compiled and none of them loaded dotenv, so they got the minimal fail-fast form rather than the `createAdminClient()` helper (which is TS-only):
+
+```js
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set — export it or add it to .env.local');
+}
+```
+
+Run them the way the other archive scripts document it: `node --env-file=.env.local <script>`. No files were deleted.
+
+### 10d. The working tree is now clean of service-role literals
+
+`git grep` for the Supabase JWT header prefix (`eyJhbGciOi…`, the base64 of `{"alg":"HS256","typ":"JWT"}`) returns **one** hit, and it is not a secret:
+
+- `csd-headshot-extension/background.js.backup:5` — this is the **anon** key (`"role": "anon"` in the decoded payload), not service-role. Anon keys are public by design; they ship in browser bundles and are RLS-constrained. Left in place deliberately.
+
+Every service-role occurrence is gone. Note that anon and service-role keys share that identical JWT header prefix, so grepping for it alone cannot tell them apart — **decode the payload and check the `role` claim** before assuming a hit is a leak.
+
+(The full prefix is deliberately not written out anywhere in this file, so that a repo-wide grep for it stays clean and these notes do not become a false positive.)
+
+No new-format keys (`sb_secret_…` / `sb_publishable_…`) appear anywhere in the tree, and no `.env*` file is tracked except `.env.local.example`.
+
+### 10e. Verification
+- `git grep` for the JWT header prefix → only the anon key in `background.js.backup` (10d); **zero service-role literals**.
+- `npx tsc --noEmit` → **clean (exit 0)**.
+- `eslint` on all 9 changed files, against a HEAD baseline of the same files: **28 problems (19 errors, 9 warnings) before, 28 after** — identical. All pre-existing `no-require-imports` / `no-explicit-any` / `no-unused-vars` in the legacy scripts. No new problems introduced.
+- No DB writes, no network calls, nothing pushed.
+
+### 10f. Guardrail worth adding (not done)
+Nothing currently stops the next hardcoded key from landing. Consider a pre-commit hook or CI step that greps staged content for the JWT header prefix and fails on any hit whose decoded `role` is `service_role`.

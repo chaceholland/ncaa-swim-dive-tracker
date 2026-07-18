@@ -2,7 +2,10 @@ const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://dtnozcqkuzhjmjvsfjqk.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0bm96Y3FrdXpoam1qdnNmanFrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDkwNjgzMCwiZXhwIjoyMDgwNDgyODMwfQ.JcESpa1uZq8tbc6XrGJynrEkW-eA9JHi41KrKlnXeUA';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set — export it or add it to .env.local');
+}
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const teamsToScrape = [
