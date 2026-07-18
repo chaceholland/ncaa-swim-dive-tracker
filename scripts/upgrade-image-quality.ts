@@ -1,9 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+// Service role required: this UPDATEs athletes.photo_url, and anon is
+// SELECT-only under RLS (an anon run silently rewrites 0 rows).
+import { createAdminClient } from './lib/supabase-admin';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createAdminClient();
 
 async function upgradeImageQuality() {
   console.log('🔍 Fetching athletes with photo URLs...\n');

@@ -9,22 +9,11 @@ import type {
   MeetTeamGroup,
 } from "@/lib/supabase/types";
 
-// Some teams use a non-standard slug in swim_teams that doesn't
-// match the simple hyphenated form of their name.
-const TEAM_SLUG_OVERRIDES: Record<string, string> = {
-  virginia: "uva",
-  // "Texas A&M" naively slugifies to "texas-a-m", but the swim slug is
-  // "texas-am". Without this the athletes→swim slug wouldn't line up.
-  "texas-a-m": "texas-am",
-};
-
-export function teamNameToSlug(name: string): string {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return TEAM_SLUG_OVERRIDES[slug] ?? slug;
-}
+// teamNameToSlug + TEAM_SLUG_OVERRIDES now live in lib/teamSlug.ts so the
+// server-only headshot route can share them without importing this module
+// (which builds an anon browser client at load). Re-exported for callers.
+import { teamNameToSlug } from "@/lib/teamSlug";
+export { teamNameToSlug } from "@/lib/teamSlug";
 
 export function formatSwimTime(ms: number): string {
   const totalSeconds = ms / 1000;

@@ -1,8 +1,28 @@
 // Updated background.js with custom handlers for Kentucky, LSU
 console.log('=== BACKGROUND SCRIPT LOADED ===');
 
-const SUPABASE_URL = 'https://dtnozcqkuzhjmjvsfjqk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0bm96Y3FrdXpoam1qdnNmanFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MDY4MzAsImV4cCI6MjA4MDQ4MjgzMH0.7puo2RCr6VMNNp_lywpAqufLEGnnE3TYqAtX8zQ0X8c';
+// Headshots are no longer PATCHed straight into Supabase. Writing with the
+// anon key was a silent no-op (RLS: anon is SELECT-only, PostgREST returns 204
+// for 0 matched rows). We now POST to the tracker's token-guarded endpoint,
+// which holds the service-role key server-side and reports real row counts.
+const API_BASE_URL = 'https://ncaa-swim-dive-tracker.vercel.app';
+const HEADSHOTS_ENDPOINT = API_BASE_URL + '/api/headshots';
+
+// Shared secret; must equal the server's HEADSHOT_SECRET env var.
+// DO NOT commit a real value here. Load it once from the service worker
+// console (chrome://extensions -> Inspect views: service worker):
+//   chrome.storage.local.set({ headshotSecret: 'the-secret-value' })
+const HEADSHOT_SECRET_FALLBACK = '';
+
+async function getHeadshotSecret() {
+  try {
+    const stored = await chrome.storage.local.get('headshotSecret');
+    if (stored && stored.headshotSecret) return stored.headshotSecret;
+  } catch (err) {
+    console.error('Could not read headshotSecret from storage: ' + err.message);
+  }
+  return HEADSHOT_SECRET_FALLBACK;
+}
 
 const TEAMS = [
   // SEC
@@ -88,7 +108,13 @@ console.log('Message listener registered');
 async function scrapeAllTeams() {
   console.log('=== CSD HEADSHOT SCRAPER STARTED ===');
   console.log('Processing ' + TEAMS.length + ' teams...');
-  
+
+  const secret = await getHeadshotSecret();
+  if (!secret) {
+    console.error('NO SECRET CONFIGURED — scrape will run but nothing will be saved.');
+    console.error('Run: chrome.storage.local.set({ headshotSecret: "..." }) and retry.');
+  }
+
   for (let i = 0; i < TEAMS.length; i++) {
     const team = TEAMS[i];
     console.log('\n[' + (i+1) + '/' + TEAMS.length + '] Processing: ' + team.name);
@@ -142,40 +168,56 @@ async function scrapeAllTeams() {
       }
       
       console.log('Updating database...');
-      let updated = 0;
-      
+      const updates = [];
       for (const athlete of athletes) {
         if (athlete.headshot) {
-          try {
-            const url = SUPABASE_URL + '/rest/v1/csd_athletes?team_id=eq.' + team.id + '&name=eq.' + encodeURIComponent(athlete.name);
-            console.log('Updating: ' + athlete.name);
-            
-            const response = await fetch(url, {
-              method: 'PATCH',
-              headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-              },
-              body: JSON.stringify({ headshot: athlete.headshot })
-            });
-            
-            if (response.ok) {
-              updated++;
-              console.log('  SUCCESS: ' + athlete.name);
-            } else {
-              const text = await response.text();
-              console.error('  FAILED: ' + athlete.name + ' - Status: ' + response.status);
-              console.error('  Response: ' + text);
-            }
-          } catch (err) {
-            console.error('  ERROR: ' + athlete.name + ' - ' + err.message);
-          }
+          updates.push({ name: athlete.name, photo_url: athlete.headshot });
         }
       }
-      
-      console.log('Updated ' + updated + '/' + withPhotos + ' athletes in database');
+
+      if (updates.length === 0) {
+        console.log('No headshots scraped for ' + team.name + ' - nothing to send');
+      } else if (!secret) {
+        console.error('SKIPPED ' + updates.length + ' headshots - no headshotSecret configured');
+      } else {
+        try {
+          const response = await fetch(HEADSHOTS_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + secret,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ team: team.id, updates: updates })
+          });
+
+          let body = null;
+          try { body = await response.json(); } catch { body = null; }
+
+          if (!response.ok) {
+            // 401 = wrong/missing secret, 404 = slug not in `teams`.
+            console.error('  UPLOAD FAILED - Status: ' + response.status);
+            console.error('  Response: ' + JSON.stringify(body));
+          } else {
+            // Real row counts from the DB, not just "the request succeeded".
+            console.log('  Sent ' + updates.length + ' of ' + withPhotos +
+              ' | matched ' + body.matched + ' | updated ' + body.updated);
+            if (body.unmatched && body.unmatched.length > 0) {
+              console.warn('  NO DB MATCH (' + body.unmatched.length + '): ' +
+                body.unmatched.join(', '));
+            }
+            if (body.errors && body.errors.length > 0) {
+              console.error('  ROW ERRORS (' + body.errors.length + '): ' +
+                JSON.stringify(body.errors));
+            }
+            if (body.updated === 0) {
+              console.error('  WARNING: 0 rows updated for ' + team.name);
+            }
+          }
+        } catch (err) {
+          console.error('  UPLOAD ERROR: ' + err.message);
+        }
+      }
+
       await chrome.tabs.remove(tab.id);
       console.log('Tab closed');
       await new Promise(r => setTimeout(r, 2000));

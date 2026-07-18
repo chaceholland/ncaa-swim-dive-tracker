@@ -11,12 +11,18 @@ export const dynamic = "force-dynamic";
 // ── Supabase (server-side, service role) ───────────────────────────
 function getSupabase() {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Service role only. There is deliberately no anon-key fallback: `athletes`
+  // and `teams` are RLS-protected with a SELECT-only anon policy, so an anon
+  // client would return success while writing 0 rows — a silent no-op cron.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !key) {
-    throw new Error("Missing Supabase credentials");
+  if (!url) {
+    throw new Error("Missing SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL");
+  }
+  if (!key) {
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY — the roster cron cannot write without it",
+    );
   }
   return createClient(url, key);
 }

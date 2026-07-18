@@ -235,3 +235,105 @@ Grep of the app tree (`app/`, `components/`, `lib/`, `hooks/`) for `swim_athlete
 
 ### 8f. Status — `swim_athletes` is now safe to DROP after burn-in
 The table is functionally code-unreferenced and every result id resolves via `athletes`. Remaining hand-off: `git push` the branch, smoke-test, then after a burn-in window `DROP TABLE swim_athletes`. No separate rollback data is needed for this code pass — revert the branch commit to restore the fallback; the Derek merge reverses via its manifest `rollback_sql`.
+
+---
+
+## 9. Phase 4 — key hygiene + token-guarded headshot endpoint (2026-07-17)
+
+Continuation on branch `consolidate-athletes-canonical`. **Code only: zero DB writes, zero DDL, no drops, no push, no deploy.** Triggered by investigating why the CSD Chrome extension stopped saving headshots.
+
+### 9a. The extension had been a silent no-op since 2026-03-04 — NOT caused by the consolidation
+
+`csd-headshot-extension/background.js` PATCHed `https://<project>.supabase.co/rest/v1/csd_athletes?...` with the **anon** key. Three facts stack up:
+
+1. `csd_athletes` is a legacy **view over `swim_athletes`** created with `security_invoker=true`, so it enforces the *caller's* RLS — i.e. anon's.
+2. Anon has **SELECT only**. The UPDATE therefore matched **0 rows**.
+3. PostgREST returns **204 No Content** for an UPDATE that matches 0 rows, and `background.js:166` checked only `response.ok` — so the extension logged `SUCCESS: <athlete name>` for every single athlete while writing nothing.
+
+The breakage dates to **2026-03-04**, months before this consolidation work began (2026-07-16). The consolidation did not cause it and did not make it worse; it only surfaced it. Note the extension was also writing the wrong column name (`headshot`) and the wrong id space (`team_id=eq.<text slug>` against a uuid column) — it could not have worked even with permission.
+
+### 9b. Why we did NOT just open an anon UPDATE policy
+
+The one-line "fix" would be an RLS policy granting anon UPDATE on `athletes`/`csd_athletes`. We deliberately rejected it:
+
+- It would put a **public, unauthenticated write grant** on the canonical roster table. The anon key ships inside a Chrome extension and in every browser bundle — it is not a credential.
+- It would **arm `npm run upgrade-images`** (`scripts/upgrade-image-quality.ts`), which is currently inert. That script does an unconditional regex rewrite of *every* non-null `photo_url` (`width=\d+`→`width=800`, `height=\d+`→`height=800`) with no dry-run, no backup and no undo — a mass rewrite across roughly **1,514 `photo_url` values**. Today it fails safe because anon can't write. An anon UPDATE policy would silently convert that script from a no-op into a one-command, irreversible bulk mutation of the photo set.
+- Any anon-writable path is also writable by anyone who reads the key, i.e. anyone.
+
+Instead the write capability was moved server-side behind a shared secret (9d), which is strictly narrower: one endpoint, one column, one team at a time.
+
+### 9c. Task A — key hygiene (no behavior change; all four paths were already inert under RLS)
+
+New shared helper **`scripts/lib/supabase-admin.ts`**: loads `.env.local` via `dotenv` (matching the `scripts/staging/*.mjs` convention) and exports `createAdminClient()`, which builds a `SUPABASE_SERVICE_ROLE_KEY` client and **throws loudly** if the URL or key is missing. It never falls back to anon — a crash beats a silent no-op. The JWT is read from env, never hardcoded (unlike `scripts/update-missing-data.ts`, which still has a literal service-role JWT in source — flagged below, left untouched as out of scope).
+
+Repointed from `NEXT_PUBLIC_SUPABASE_ANON_KEY` → `createAdminClient()`:
+- `scripts/upgrade-image-quality.ts` (UPDATE `photo_url`) — see the 9b caveat: this is now *armed*. Treat it as a destructive bulk operation and back up `photo_url` before running it.
+- `scripts/scrape-athletes.ts` (INSERT `athletes`)
+- `scripts/scrape-athletes-v2.ts` (INSERT `athletes`)
+- `scripts/rescrape-teams.ts` (INSERT `athletes`)
+
+`app/api/update/route.ts` — removed the silent anon fallback in `getSupabase()`. Was `SUPABASE_SERVICE_ROLE_KEY ?? NEXT_PUBLIC_SUPABASE_ANON_KEY`; now service-role only, throwing a distinct error per missing variable. Previously a Vercel deploy missing `SUPABASE_SERVICE_ROLE_KEY` would degrade to an anon client and report a successful cron run that wrote nothing — the same failure mode as the extension.
+
+### 9d. Task B — token-guarded headshot endpoint + extension repoint
+
+New route **`app/api/headshots/route.ts`**:
+
+| | |
+|---|---|
+| Method / path | `POST /api/headshots` (plus `OPTIONS` for the extension's CORS preflight) |
+| Auth | `Authorization: Bearer <HEADSHOT_SECRET>` — same shape as the `CRON_SECRET` check in `app/api/update/route.ts:388`. **Mandatory**, unlike CRON_SECRET's `if (secret)` pattern: if `HEADSHOT_SECRET` is unset the route returns **503**, so it can never sit open. Mismatch → **401**. The secret is never logged or echoed. |
+| Body | `{ "team": "<slug>", "updates": [{ "name": "...", "photo_url": "https://..." }] }` — batched per team (max 500 per request); items with a blank name or a non-`http(s)` URL are skipped and counted as `skippedInvalid`. |
+| Team resolution | Server-side only. Loads `teams`, indexes it with the shared `teamNameToSlug` + `TEAM_SLUG_OVERRIDES` logic, and resolves the posted slug → `teams.id` uuid. Unknown slug → **404** with the slug echoed back. |
+| Write | `athletes.photo_url` (+ `updated_at`), matched on `team_id` + `name`, using the **service-role** client. Exact name match first, then a case-insensitive exact match (`ilike`, wildcards escaped) as a fallback — no fuzzy matching. |
+| Response | `{ team, teamId, teamName, received, skippedInvalid, matched, updated, unmatched: [names], errors: [{name, error}] }`. Counts come from `.select()` on the UPDATE, so they are **actual affected rows** — the truthfulness that was missing before. |
+
+Supporting extraction: **`lib/teamSlug.ts`** (new) now owns `TEAM_SLUG_OVERRIDES`, `teamNameToSlug` and a `naiveTeamSlug` helper; `lib/swimcloud.ts` imports and re-exports `teamNameToSlug` so its callers (`components/TopPerformersStrip.tsx`) are unchanged. The extraction exists because `lib/swimcloud.ts` instantiates an **anon browser client at module load** — importing it from a service-role route would both pull that client into a server bundle and make the route crash on import if the `NEXT_PUBLIC_*` vars were absent. Single source of truth is preserved; nothing is duplicated.
+
+**Slug alias (bug found while wiring this up):** the extension's team ids predate `TEAM_SLUG_OVERRIDES`. It sends `virginia`, but `teamNameToSlug("Virginia")` returns `uva` — a straight slug map would 404 that team. The index therefore also registers the naive (pre-override) slug as an alias, without ever clobbering a canonical slug claimed by another team. Both `virginia`/`uva` and `texas-am`/`texas-a-m` resolve.
+
+`csd-headshot-extension/background.js` (that file only; `background.js.backup` and `background-lsu-fix.js` untouched):
+- Dropped the hardcoded `SUPABASE_URL` / anon `SUPABASE_KEY`; added `API_BASE_URL = 'https://ncaa-swim-dive-tracker.vercel.app'` and `HEADSHOTS_ENDPOINT`.
+- Secret read via `getHeadshotSecret()` → `chrome.storage.local.get('headshotSecret')`, with an empty, clearly-commented `HEADSHOT_SECRET_FALLBACK = ''` placeholder. **No secret value is committed.** If no secret is present the run still scrapes but logs a loud `NO SECRET CONFIGURED` and uploads nothing.
+- The per-athlete PATCH loop became **one batched POST per team**.
+- Logging now reports the endpoint's real numbers — `Sent N of M | matched X | updated Y`, a `NO DB MATCH (n): name, name…` warning listing every unmatched athlete, row-level errors, and an explicit `WARNING: 0 rows updated` line. The old unconditional per-athlete `SUCCESS:` log is gone.
+- The route returns permissive CORS headers (`Access-Control-Allow-Origin: *`) and handles `OPTIONS`, because `manifest.json` `host_permissions` covers only `*.com` / `*.net` / `*.edu` — not `*.app`. This keeps the fix inside `background.js` as scoped. Allowing any origin is safe here: every request still needs the bearer secret and no credentials are involved. (Optional later cleanup: add `https://ncaa-swim-dive-tracker.vercel.app/*` to `host_permissions` and tighten the CORS origin.)
+
+### 9e. Env vars Chace must set
+
+| Variable | Where | Notes |
+|---|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | Vercel project env **and** `.env.local` | Already in `.env.local`. **Confirm it is set in Vercel** — with the fallback removed, `/api/update` now fails fast instead of pretending to succeed. |
+| `HEADSHOT_SECRET` | Vercel project env **and** `.env.local` | New. Generate with `openssl rand -hex 32`. Redeploy after adding. Until it is set, `/api/headshots` returns 503 by design. |
+
+Both are documented in `.env.local.example` (updated this pass). `.env*` is gitignored — no secret is committed.
+
+### 9f. Loading the secret into the extension
+
+1. `chrome://extensions` → CSD Roster Headshot Scraper → **service worker** ("Inspect views") to open its DevTools console.
+2. Run, with the same value set in Vercel:
+   ```js
+   chrome.storage.local.set({ headshotSecret: 'PASTE_HEADSHOT_SECRET_HERE' })
+   ```
+3. Verify: `chrome.storage.local.get('headshotSecret').then(console.log)`
+4. Reload the extension and run a scrape. The console should print real `matched`/`updated` counts. Storage persists across reloads; re-run step 2 only if the extension is removed and re-added, or the secret is rotated.
+
+To clear it: `chrome.storage.local.remove('headshotSecret')`.
+
+### 9g. Verification
+- `npx tsc --noEmit` → **clean (exit 0)**.
+- `eslint` on all changed + new files → **no new problems**. Byte-for-byte against a HEAD baseline of the same files: 24 errors / 6 warnings before, 24 errors / 6 warnings after (all pre-existing `no-explicit-any` / `prefer-const` / `ban-ts-comment` in the legacy scraper scripts; only their line numbers shifted). Every file authored this pass — `app/api/headshots/route.ts`, `lib/teamSlug.ts`, `scripts/lib/supabase-admin.ts`, `csd-headshot-extension/background.js` — is eslint-clean.
+- `node --check csd-headshot-extension/background.js` → OK.
+- **No live call to `/api/headshots`** — it is not deployed and the secret does not exist yet.
+- `next build` still not runnable in the Linux sandbox (lightningcss native-binary mismatch, §4e) — environmental; builds on Chace's Mac.
+
+### 9h. Still pending — Chace-run, now verified safe
+```sql
+DROP VIEW public.csd_athletes;
+DROP TABLE public.swim_athletes;
+```
+§8d established `swim_athletes` is code-unreferenced and §8b that orphans are 0. This pass adds the last missing piece: **the extension never actually wrote through `csd_athletes`** (9a) — every PATCH matched 0 rows for four months — so dropping the view destroys no write path and loses no data that was ever persisted. The extension no longer references the view at all after 9d. Drop the view before the table (the view depends on it).
+
+### 9i. Follow-ups (not done — out of scope)
+- `scripts/update-missing-data.ts:4-6` still contains a **hardcoded service-role JWT** in committed source. It was outside this pass's four-file scope, but that key is in git history and should be rotated, then the script switched to `createAdminClient()`. Rotating it means updating `SUPABASE_SERVICE_ROLE_KEY` in Vercel and `.env.local` at the same time.
+- `scripts/upgrade-image-quality.ts` is now armed (9c). Add a `--dry-run` flag and a `photo_url` backup before it is ever run.
+- Extension `manifest.json` still lacks a `host_permissions` entry for the tracker origin; the route's CORS headers cover it for now.

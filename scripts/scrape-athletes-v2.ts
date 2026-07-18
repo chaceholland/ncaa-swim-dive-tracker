@@ -1,15 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright";
+// Service role required: this INSERTs into athletes, and anon is SELECT-only
+// under RLS (an anon run silently inserts nothing).
+import { createAdminClient } from "./lib/supabase-admin";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Error: Missing Supabase credentials");
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createAdminClient();
 
 interface TeamRosterUrl {
   teamName: string;

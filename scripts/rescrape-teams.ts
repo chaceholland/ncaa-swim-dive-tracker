@@ -1,9 +1,9 @@
 import { chromium } from "playwright";
-import { createClient } from "@supabase/supabase-js";
+// Service role required: this INSERTs into athletes, and anon is SELECT-only
+// under RLS (an anon run silently inserts nothing).
+import { createAdminClient } from "./lib/supabase-admin";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createAdminClient();
 
 interface AthleteData {
   name: string;
